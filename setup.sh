@@ -1,0 +1,52 @@
+#!/bin/bash
+
+echo "🚀 VibeAgent Setup Script"
+echo "=========================="
+echo ""
+
+# Check Python version
+python_version=$(python3 --version 2>&1 | awk '{print $2}')
+echo "✓ Python version: $python_version"
+
+# Create virtual environment if it doesn't exist
+if [ ! -d "venv" ]; then
+    echo "📦 Creating virtual environment..."
+    python3 -m venv venv
+    echo "✓ Virtual environment created"
+else
+    echo "✓ Virtual environment already exists"
+fi
+
+# Activate virtual environment
+echo "🔧 Activating virtual environment..."
+source venv/bin/activate
+
+# Upgrade pip
+echo "⬆️  Upgrading pip..."
+pip install --upgrade pip > /dev/null 2>&1
+echo "✓ Pip upgraded"
+
+# Install dependencies
+echo "📚 Installing dependencies..."
+pip install -r requirements.txt
+echo "✓ Dependencies installed"
+
+# Create .env if it doesn't exist
+if [ ! -f ".env" ]; then
+    echo "⚙️  Creating .env file..."
+    cp .env.example .env
+    echo "✓ .env file created - please edit it with your settings"
+else
+    echo "✓ .env file already exists"
+fi
+
+echo ""
+echo "✅ Setup complete!"
+echo ""
+echo "📖 Next steps:"
+echo "1. Edit .env with your RPC URLs and wallet address"
+echo "2. Run the web interface: python -m vibeagent.cli web"
+echo "   OR use CLI: python -m vibeagent.cli init-agent --help"
+echo ""
+echo "💡 For detailed instructions, see docs/USER_GUIDE.md"
+echo ""

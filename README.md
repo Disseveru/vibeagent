@@ -1,1 +1,262 @@
-# vibeagent
+# 🚀 VibeAgent
+
+**AI-Powered DeFi Strategy Generator for Instadapp Avocado Multi-Sig Wallet**
+
+VibeAgent is an intelligent coding assistant that helps you create and execute sophisticated DeFi strategies including flashloan arbitrage and liquidations - all without writing a single line of code!
+
+## ✨ Features
+
+- 🤖 **AI-Powered Strategy Generation**: Automatically detects and creates optimal DeFi strategies
+- 💎 **Flashloan Arbitrage**: Find price differences across DEXes and profit with zero capital
+- 🎯 **Smart Liquidations**: Identify and execute profitable liquidations on lending protocols
+- 🔐 **Avocado Multi-Sig Integration**: Seamlessly integrates with Instadapp's Avocado wallet transaction builder
+- 🌐 **No-Code Web Interface**: Beautiful, intuitive UI for non-technical users
+- ⚡ **CLI Support**: Command-line interface for quick operations
+- 🔗 **Multi-Chain**: Supports Ethereum, Polygon, and Arbitrum
+
+## 🎯 Perfect For
+
+- Non-technical users who want to profit from DeFi opportunities
+- Users with Instadapp Avocado multi-sig wallets
+- Anyone interested in flashloan arbitrage and liquidations
+- DeFi enthusiasts who don't know how to code
+
+## 🚀 Quick Start
+
+### Installation
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/Disseveru/vibeagent.git
+cd vibeagent
+```
+
+2. **Install dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+3. **Configure environment**
+```bash
+cp .env.example .env
+# Edit .env with your settings
+```
+
+### Usage Options
+
+#### Option 1: Web Interface (Recommended for Non-Coders)
+
+Start the web interface:
+```bash
+python -m vibeagent.cli web
+```
+
+Then open your browser at `http://localhost:5000`
+
+**Steps:**
+1. Enter your Avocado wallet address and select network
+2. Click "Initialize Agent"
+3. Choose Arbitrage or Liquidation tab
+4. Enter token addresses or protocol details
+5. Click "Scan" to find opportunities
+6. Click "Export for Avocado Transaction Builder"
+7. Copy the JSON and import it into [avocado.instadapp.io](https://avocado.instadapp.io)
+
+#### Option 2: Command Line Interface
+
+Initialize the agent:
+```bash
+python -m vibeagent.cli init-agent \
+  --network ethereum \
+  --wallet 0xYourAvocadoWalletAddress
+```
+
+Scan for arbitrage opportunities:
+```bash
+python -m vibeagent.cli arbitrage \
+  --token-a 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 \
+  --token-b 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 \
+  --dexes uniswap_v3,sushiswap \
+  --output my_arbitrage.json
+```
+
+Scan for liquidation opportunities:
+```bash
+python -m vibeagent.cli liquidation \
+  --protocol aave \
+  --output my_liquidation.json
+```
+
+Simulate before executing:
+```bash
+python -m vibeagent.cli simulate \
+  --strategy-file my_arbitrage.json
+```
+
+## 🔧 Configuration
+
+Edit `.env` file:
+
+```env
+# RPC URLs (get from Alchemy or Infura)
+ETHEREUM_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY
+POLYGON_RPC_URL=https://polygon-mainnet.g.alchemy.com/v2/YOUR_API_KEY
+ARBITRUM_RPC_URL=https://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY
+
+# Optional: OpenAI for enhanced AI features
+OPENAI_API_KEY=your_openai_key_here
+
+# Avocado Wallet Configuration
+AVOCADO_WALLET_ADDRESS=0xYourWalletAddress
+
+# Strategy Parameters
+MIN_PROFIT_USD=50
+MAX_GAS_PRICE_GWEI=100
+```
+
+## 📱 Using with Avocado Multi-Sig Wallet
+
+### What is Avocado?
+
+Avocado is Instadapp's multi-signature smart contract wallet with advanced transaction building capabilities. It allows you to:
+- Execute complex multi-step transactions in one go
+- Require multiple signers for security
+- Build and simulate transactions before execution
+
+### Integration Steps
+
+1. **Generate Strategy**: Use VibeAgent's web or CLI interface to scan for opportunities
+2. **Export JSON**: Click "Export for Avocado Transaction Builder" or use CLI export
+3. **Import to Avocado**:
+   - Go to [avocado.instadapp.io](https://avocado.instadapp.io)
+   - Navigate to Transaction Builder
+   - Click "Import Batch"
+   - Paste the generated JSON
+4. **Review**: Check all transaction details
+5. **Simulate**: Use Avocado's simulation feature
+6. **Execute**: Gather required signatures and execute
+
+## 💡 Strategy Types
+
+### Flashloan Arbitrage
+
+Exploit price differences between DEXes with zero capital:
+
+```
+1. Take flashloan from Aave
+2. Buy token on DEX A (cheaper)
+3. Sell token on DEX B (more expensive)
+4. Repay flashloan + fee
+5. Keep the profit
+```
+
+### Liquidations
+
+Profit from undercollateralized positions in lending protocols:
+
+```
+1. Take flashloan for debt token
+2. Liquidate undercollateralized position
+3. Receive collateral + liquidation bonus
+4. Swap collateral back to debt token
+5. Repay flashloan
+6. Keep the profit
+```
+
+## 🎨 Web Interface Preview
+
+The web interface provides:
+- 🎯 Simple configuration with network selection
+- 🔍 Opportunity scanner with real-time analysis
+- 📊 Strategy visualization
+- ⚡ One-click export to Avocado
+- ⚠️ Risk warnings and gas estimates
+- 📱 Mobile-responsive design
+
+## 🛡️ Security
+
+- ✅ Strategies are simulated before execution
+- ✅ Gas estimates provided upfront
+- ✅ Risk warnings for high slippage or complexity
+- ✅ Works with multi-sig wallets for added security
+- ✅ No private keys stored - integrates with your existing wallet
+- ⚠️ Always review transactions before signing
+- ⚠️ Test with small amounts first
+
+## 🔗 Supported Protocols
+
+### DEXes (Arbitrage)
+- Uniswap V3
+- SushiSwap
+- Curve (coming soon)
+- Balancer (coming soon)
+
+### Lending Protocols (Liquidation)
+- Aave V3
+- Compound V3
+- More coming soon
+
+### Flashloan Providers
+- Aave V3 (default)
+- Balancer (coming soon)
+
+## 📚 Examples
+
+### Example 1: WETH/USDC Arbitrage
+```bash
+python -m vibeagent.cli arbitrage \
+  --token-a 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 \
+  --token-b 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 \
+  --dexes uniswap_v3,sushiswap
+```
+
+### Example 2: Aave Liquidations
+```bash
+python -m vibeagent.cli liquidation \
+  --protocol aave \
+  --output aave_liquidations.json
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## ⚠️ Disclaimer
+
+This software is provided "as is" without warranty. DeFi involves risk:
+- Smart contract risk
+- Market volatility risk
+- Liquidation risk
+- Gas price fluctuations
+
+**Always:**
+- Test with small amounts first
+- Understand the strategies you're executing
+- Review all transactions before signing
+- Never invest more than you can afford to lose
+
+## 🆘 Support
+
+- 📖 [Documentation](https://github.com/Disseveru/vibeagent/wiki)
+- 💬 [Discord Community](https://discord.gg/vibeagent)
+- 🐛 [Report Issues](https://github.com/Disseveru/vibeagent/issues)
+
+## 🎯 Roadmap
+
+- [ ] Support for more DEXes and protocols
+- [ ] Advanced AI strategy optimization
+- [ ] Telegram bot interface
+- [ ] Mobile app
+- [ ] Strategy backtesting
+- [ ] Community strategy sharing
+- [ ] Automated execution with monitoring
+
+---
+
+**Built with ❤️ for the DeFi community**
+
+*No coding required. Just pure DeFi alpha.*
