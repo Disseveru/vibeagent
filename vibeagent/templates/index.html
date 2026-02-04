@@ -639,10 +639,16 @@
             installBanner.className = 'status info install-banner';
             installBanner.innerHTML = `
                 📱 <strong>Install VibeAgent</strong> on your Android device for a better experience!
-                <button onclick="installPWA()" class="install-btn">Install</button>
-                <button onclick="this.parentElement.remove()" class="dismiss-btn">Later</button>
+                <button id="pwa-install-btn" class="install-btn">Install</button>
+                <button id="pwa-dismiss-btn" class="dismiss-btn">Later</button>
             `;
             document.body.appendChild(installBanner);
+            
+            // Attach event listeners
+            document.getElementById('pwa-install-btn').addEventListener('click', installPWA);
+            document.getElementById('pwa-dismiss-btn').addEventListener('click', function() {
+                installBanner.remove();
+            });
         }
         
         function installPWA() {

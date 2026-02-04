@@ -33,6 +33,8 @@ self.addEventListener('fetch', event => {
         return fetch(event.request).then(
           response => {
             // Check if we received a valid response
+            // Only cache 'basic' type responses (same-origin) to avoid caching issues
+            // with CORS responses that may have restricted access
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }

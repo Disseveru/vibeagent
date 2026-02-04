@@ -22,14 +22,14 @@ def create_icon(size, output_path):
         draw.rectangle([(0, i), (size, i+1)], fill=(r, g, b))
     
     # Add text "VA" in the center
+    font_paths = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Linux
+        "/System/Library/Fonts/Helvetica.ttc",  # macOS
+        "C:\\Windows\\Fonts\\arialbd.ttf",  # Windows
+    ]
     try:
         # Try to use a nice font with platform-specific paths
         font_size = size // 2
-        font_paths = [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Linux
-            "/System/Library/Fonts/Helvetica.ttc",  # macOS
-            "C:\\Windows\\Fonts\\arialbd.ttf",  # Windows
-        ]
         font = None
         for font_path in font_paths:
             try:
@@ -38,9 +38,10 @@ def create_icon(size, output_path):
             except (IOError, OSError):
                 continue
         if font is None:
-            raise IOError("No suitable font found")
-    except (IOError, OSError):
+            raise IOError(f"No suitable font found. Tried paths: {', '.join(font_paths)}")
+    except (IOError, OSError) as e:
         # Fallback to default font
+        print(f"Warning: {e}. Using default font.")
         font = ImageFont.load_default()
     
     text = "VA"
