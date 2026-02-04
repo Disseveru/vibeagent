@@ -13,6 +13,7 @@ VibeAgent is an intelligent coding assistant that helps you create and execute s
 - 🌐 **No-Code Web Interface**: Beautiful, intuitive UI for non-technical users
 - ⚡ **CLI Support**: Command-line interface for quick operations
 - 🔗 **Multi-Chain**: Supports Ethereum, Polygon, and Arbitrum
+- 📱 **Android PWA Support**: Install as a native-like app on Android devices
 
 ## 🎯 Perfect For
 
@@ -61,6 +62,18 @@ Then open your browser at `http://localhost:5000`
 5. Click "Scan" to find opportunities
 6. Click "Export for Avocado Transaction Builder"
 7. Copy the JSON and import it into [avocado.instadapp.io](https://avocado.instadapp.io)
+
+#### 📱 Android Installation (PWA)
+
+Install VibeAgent as a Progressive Web App on your Android device:
+
+1. Open the web interface in Chrome on your Android device
+2. Tap the "Install" button when prompted, or
+3. Tap the menu (⋮) → "Add to Home screen" or "Install app"
+4. The app icon will appear on your home screen
+5. Launch it like any native Android app!
+
+See [Android Installation Guide](docs/ANDROID_INSTALL.md) for detailed instructions.
 
 #### Option 2: Command Line Interface
 
@@ -172,6 +185,7 @@ The web interface provides:
 - ⚡ One-click export to Avocado
 - ⚠️ Risk warnings and gas estimates
 - 📱 Mobile-responsive design
+- 🤖 Progressive Web App for Android devices
 
 ## 🛡️ Security
 
@@ -250,7 +264,7 @@ This software is provided "as is" without warranty. DeFi involves risk:
 - [ ] Support for more DEXes and protocols
 - [ ] Advanced AI strategy optimization
 - [ ] Telegram bot interface
-- [ ] Mobile app
+- [x] Mobile app (Android PWA available now!)
 - [ ] Strategy backtesting
 - [ ] Community strategy sharing
 - [ ] Automated execution with monitoring
