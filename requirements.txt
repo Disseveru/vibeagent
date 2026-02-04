@@ -1,0 +1,24 @@
+# Web3 and Blockchain
+web3>=6.0.0
+eth-account>=0.10.0
+eth-utils>=2.3.0
+
+# API and HTTP
+requests>=2.31.0
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# AI/ML for strategy detection
+openai>=1.0.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Configuration
+python-dotenv>=1.0.0
+pyyaml>=6.0.0
+
+# Utilities
+colorama>=0.4.6
+click>=8.1.0
