@@ -234,6 +234,37 @@
         .tab-content.active {
             display: block;
         }
+        
+        /* PWA Install Banner Styles */
+        .install-banner {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            max-width: 90%;
+            cursor: pointer;
+        }
+        
+        .install-btn {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .dismiss-btn {
+            margin-left: 5px;
+            padding: 5px 10px;
+            background: #ccc;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -605,12 +636,11 @@
             
             // Create install banner
             const installBanner = document.createElement('div');
-            installBanner.className = 'status info';
-            installBanner.style.cssText = 'position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; max-width: 90%; cursor: pointer;';
+            installBanner.className = 'status info install-banner';
             installBanner.innerHTML = `
                 📱 <strong>Install VibeAgent</strong> on your Android device for a better experience!
-                <button onclick="installPWA()" style="margin-left: 10px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Install</button>
-                <button onclick="this.parentElement.remove()" style="margin-left: 5px; padding: 5px 10px; background: #ccc; color: black; border: none; border-radius: 5px; cursor: pointer;">Later</button>
+                <button onclick="installPWA()" class="install-btn">Install</button>
+                <button onclick="this.parentElement.remove()" class="dismiss-btn">Later</button>
             `;
             document.body.appendChild(installBanner);
         }

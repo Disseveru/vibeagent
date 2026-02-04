@@ -23,10 +23,23 @@ def create_icon(size, output_path):
     
     # Add text "VA" in the center
     try:
-        # Try to use a nice font
+        # Try to use a nice font with platform-specific paths
         font_size = size // 2
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
-    except:
+        font_paths = [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Linux
+            "/System/Library/Fonts/Helvetica.ttc",  # macOS
+            "C:\\Windows\\Fonts\\arialbd.ttf",  # Windows
+        ]
+        font = None
+        for font_path in font_paths:
+            try:
+                font = ImageFont.truetype(font_path, font_size)
+                break
+            except (IOError, OSError):
+                continue
+        if font is None:
+            raise IOError("No suitable font found")
+    except (IOError, OSError):
         # Fallback to default font
         font = ImageFont.load_default()
     
