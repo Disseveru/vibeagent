@@ -136,7 +136,9 @@ class VibeAgent:
         """
         if not self.openai_client:
             print("OpenAI not configured, using template strategy")
-            return self._generate_template_strategy(opportunity)
+            strategy = self._generate_template_strategy(opportunity)
+            opportunity["strategy"] = strategy
+            return opportunity
         
         prompt = self._create_strategy_prompt(opportunity)
         
@@ -149,7 +151,8 @@ class VibeAgent:
             
         except Exception as e:
             print(f"AI generation failed: {e}, using template")
-            opportunity["strategy"] = self._generate_template_strategy(opportunity)
+            strategy = self._generate_template_strategy(opportunity)
+            opportunity["strategy"] = strategy
         
         return opportunity
     
