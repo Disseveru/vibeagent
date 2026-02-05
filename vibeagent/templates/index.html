@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VibeAgent - DeFi Strategy Generator</title>
+    
+    <!-- PWA Meta Tags for Android -->
+    <meta name="description" content="AI-Powered DeFi Strategy Generator for Instadapp Avocado Multi-Sig Wallet">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VibeAgent">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/icons/icon-512x512.png">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
     <style>
         * {
             margin: 0;
@@ -217,6 +233,37 @@
         
         .tab-content.active {
             display: block;
+        }
+        
+        /* PWA Install Banner Styles */
+        .install-banner {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            max-width: 90%;
+            cursor: pointer;
+        }
+        
+        .install-btn {
+            margin-left: 10px;
+            padding: 5px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .dismiss-btn {
+            margin-left: 5px;
+            padding: 5px 10px;
+            background: #ccc;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -554,6 +601,70 @@
             }).catch(err => {
                 showStatus('Failed to copy', 'error');
             });
+        }
+        
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+        
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show install button/banner if desired
+            showInstallPromotion();
+        });
+        
+        function showInstallPromotion() {
+            // Check if already installed
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('App is already installed');
+                return;
+            }
+            
+            // Create install banner
+            const installBanner = document.createElement('div');
+            installBanner.className = 'status info install-banner';
+            installBanner.innerHTML = `
+                📱 <strong>Install VibeAgent</strong> on your Android device for a better experience!
+                <button id="pwa-install-btn" class="install-btn">Install</button>
+                <button id="pwa-dismiss-btn" class="dismiss-btn">Later</button>
+            `;
+            document.body.appendChild(installBanner);
+            
+            // Attach event listeners
+            document.getElementById('pwa-install-btn').addEventListener('click', installPWA);
+            document.getElementById('pwa-dismiss-btn').addEventListener('click', function() {
+                installBanner.remove();
+            });
+        }
+        
+        function installPWA() {
+            if (deferredPrompt) {
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            }
         }
     </script>
 </body>

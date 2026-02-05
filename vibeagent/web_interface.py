@@ -2,7 +2,7 @@
 Flask Web Interface for VibeAgent
 No-code interface for non-technical users
 """
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import os
 import json
@@ -22,6 +22,12 @@ avocado = None
 def index():
     """Main page"""
     return render_template('index.html')
+
+
+@app.route('/static/<path:path>')
+def send_static(path):
+    """Serve static files (manifest, service worker, icons)"""
+    return send_from_directory('static', path)
 
 
 @app.route('/api/initialize', methods=['POST'])
