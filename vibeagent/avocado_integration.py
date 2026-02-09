@@ -218,21 +218,29 @@ class AvocadoIntegration:
         Export strategy as JSON for Avocado transaction builder
         
         Args:
-            strategy: Strategy to export
+            strategy: Strategy dict or opportunity dict with 'strategy' key
             filename: Optional filename to save to
             
         Returns:
             JSON string of the transaction batch
         """
-        transaction_batch = self.strategy_to_avocado_transactions(strategy)
+        # Handle both opportunity and strategy objects
+        if 'strategy' in strategy and isinstance(strategy['strategy'], dict):
+            # This is an opportunity object, extract the strategy
+            actual_strategy = strategy['strategy']
+        else:
+            # This is already a strategy object
+            actual_strategy = strategy
+        
+        transaction_batch = self.strategy_to_avocado_transactions(actual_strategy)
         
         # Add metadata
         transaction_batch["meta"]["timestamp"] = datetime.now().isoformat()
         transaction_batch["meta"]["network"] = self.network
         transaction_batch["meta"]["wallet"] = self.wallet_address
-        transaction_batch["meta"]["estimated_profit"] = strategy.get("estimated_profit_usd", 0)
-        transaction_batch["meta"]["estimated_gas"] = strategy.get("estimated_gas", 0)
-        transaction_batch["meta"]["risk_level"] = self._assess_risk_level(strategy)
+        transaction_batch["meta"]["estimated_profit"] = actual_strategy.get("estimated_profit_usd", 0)
+        transaction_batch["meta"]["estimated_gas"] = actual_strategy.get("estimated_gas", 0)
+        transaction_batch["meta"]["risk_level"] = self._assess_risk_level(actual_strategy)
         
         json_output = json.dumps(transaction_batch, indent=2)
         
