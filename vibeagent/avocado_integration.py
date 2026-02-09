@@ -349,23 +349,23 @@ class AvocadoIntegration:
             else:
                 amount_wei = int(float(amount) * (10 ** 18))
             
+            # Get pool address
+            pool_address = CONTRACT_ADDRESSES[self.network]["aave_v3_pool"]
+            
             # Create contract instance for encoding
-            pool = self.web3.eth.contract(abi=AAVE_V3_POOL_ABI)
+            pool = self.web3.eth.contract(address=pool_address, abi=AAVE_V3_POOL_ABI)
             
             # Encode flashLoan function call
             # flashLoan(receiverAddress, assets[], amounts[], modes[], onBehalfOf, params, referralCode)
-            encoded = pool.encodeABI(
-                fn_name='flashLoan',
-                args=[
-                    self.wallet_address,  # receiver
-                    [token],  # assets array
-                    [amount_wei],  # amounts array
-                    [0],  # modes (0 = no debt, flash loan only)
-                    self.wallet_address,  # onBehalfOf
-                    b'',  # params (empty bytes)
-                    0  # referralCode
-                ]
-            )
+            encoded = pool.functions.flashLoan(
+                self.wallet_address,  # receiver
+                [token],  # assets array
+                [amount_wei],  # amounts array
+                [0],  # modes (0 = no debt, flash loan only)
+                self.wallet_address,  # onBehalfOf
+                b'',  # params (empty bytes)
+                0  # referralCode
+            )._encode_transaction_data()
             return encoded
             
         except Exception as e:
@@ -389,41 +389,39 @@ class AvocadoIntegration:
             to_token = Web3.to_checksum_address(to_token)
             
             if dex == "uniswap_v3":
+                # Get router address
+                router_address = CONTRACT_ADDRESSES[self.network]["uniswap_v3_router"]
+                
                 # Encode Uniswap V3 exactInputSingle
-                router = self.web3.eth.contract(abi=UNISWAP_V3_ROUTER_ABI)
+                router = self.web3.eth.contract(address=router_address, abi=UNISWAP_V3_ROUTER_ABI)
                 
                 # Placeholder values - would be calculated from actual balances
-                encoded = router.encodeABI(
-                    fn_name='exactInputSingle',
-                    args=[
-                        (
-                            from_token,  # tokenIn
-                            to_token,  # tokenOut
-                            3000,  # fee (0.3%)
-                            self.wallet_address,  # recipient
-                            int(datetime.now().timestamp()) + 300,  # deadline (5 min)
-                            10 ** 18,  # amountIn (placeholder)
-                            0,  # amountOutMinimum (would calculate with slippage)
-                            0  # sqrtPriceLimitX96
-                        )
-                    ]
-                )
+                encoded = router.functions.exactInputSingle((
+                    from_token,  # tokenIn
+                    to_token,  # tokenOut
+                    3000,  # fee (0.3%)
+                    self.wallet_address,  # recipient
+                    int(datetime.now().timestamp()) + 300,  # deadline (5 min)
+                    10 ** 18,  # amountIn (placeholder)
+                    0,  # amountOutMinimum (would calculate with slippage)
+                    0  # sqrtPriceLimitX96
+                ))._encode_transaction_data()
                 return encoded
                 
             elif dex == "sushiswap":
-                # Encode SushiSwap swapExactTokensForTokens
-                router = self.web3.eth.contract(abi=SUSHISWAP_ROUTER_ABI)
+                # Get router address
+                router_address = CONTRACT_ADDRESSES[self.network]["sushiswap_router"]
                 
-                encoded = router.encodeABI(
-                    fn_name='swapExactTokensForTokens',
-                    args=[
-                        10 ** 18,  # amountIn (placeholder)
-                        0,  # amountOutMin (would calculate with slippage)
-                        [from_token, to_token],  # path
-                        self.wallet_address,  # to
-                        int(datetime.now().timestamp()) + 300  # deadline
-                    ]
-                )
+                # Encode SushiSwap swapExactTokensForTokens
+                router = self.web3.eth.contract(address=router_address, abi=SUSHISWAP_ROUTER_ABI)
+                
+                encoded = router.functions.swapExactTokensForTokens(
+                    10 ** 18,  # amountIn (placeholder)
+                    0,  # amountOutMin (would calculate with slippage)
+                    [from_token, to_token],  # path
+                    self.wallet_address,  # to
+                    int(datetime.now().timestamp()) + 300  # deadline
+                )._encode_transaction_data()
                 return encoded
             
             else:
@@ -453,21 +451,21 @@ class AvocadoIntegration:
             debt_token = Web3.to_checksum_address(debt_token)
             user = Web3.to_checksum_address(user)
             
+            # Get pool address
+            pool_address = CONTRACT_ADDRESSES[self.network]["aave_v3_pool"]
+            
             # Create contract instance for encoding
-            pool = self.web3.eth.contract(abi=AAVE_V3_POOL_ABI)
+            pool = self.web3.eth.contract(address=pool_address, abi=AAVE_V3_POOL_ABI)
             
             # Encode liquidationCall
             # liquidationCall(collateralAsset, debtAsset, user, debtToCover, receiveAToken)
-            encoded = pool.encodeABI(
-                fn_name='liquidationCall',
-                args=[
-                    collateral_token,  # collateral asset
-                    debt_token,  # debt asset
-                    user,  # user to liquidate
-                    2 ** 256 - 1,  # max uint256 (liquidate as much as possible)
-                    False  # receive aToken (False = receive underlying)
-                ]
-            )
+            encoded = pool.functions.liquidationCall(
+                collateral_token,  # collateral asset
+                debt_token,  # debt asset
+                user,  # user to liquidate
+                2 ** 256 - 1,  # max uint256 (liquidate as much as possible)
+                False  # receive aToken (False = receive underlying)
+            )._encode_transaction_data()
             return encoded
             
         except Exception as e:
