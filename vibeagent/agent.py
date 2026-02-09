@@ -551,8 +551,9 @@ class VibeAgent:
             gas_price = self.web3.eth.gas_price
             # Estimate ETH cost
             eth_cost = (gas_price * gas_units) / (10 ** 18)
-            # Rough ETH price estimation (this would ideally come from an oracle)
-            eth_price_usd = 2000  # Conservative estimate
+            # ETH price estimation (in production, fetch from price oracle or Chainlink)
+            # This is a conservative estimate to prevent underestimating costs
+            eth_price_usd = 2000  # TODO: Integrate with price oracle (Chainlink, Uniswap TWAP, etc.)
             return int(eth_cost * eth_price_usd)
         except Exception as e:
             print(f"Error estimating gas cost: {e}")
