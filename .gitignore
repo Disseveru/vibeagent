@@ -36,6 +36,9 @@ ENV/
 .env
 .env.local
 
+# Configuration
+.vibeagent_config.json
+
 # Deployment
 deployed_contracts/
 private_keys.txt
