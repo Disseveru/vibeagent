@@ -154,8 +154,8 @@ The work is **never deleted** - it becomes part of the permanent codebase!
 ### Environment Setup
 
 ```bash
-# Clone the repo
-git clone https://github.com/Disseveru/vibeagent.git
+# Clone your fork (or the main repo)
+git clone https://github.com/YOUR_USERNAME/vibeagent.git
 cd vibeagent
 
 # Create virtual environment
