@@ -233,7 +233,31 @@ python -m vibeagent.cli liquidation \
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions from the community! 
+
+**Quick Answer**: Reviewing a pull request does NOT delete your work! It provides feedback and helps improve the code. Your work only becomes part of the main codebase after the PR is approved and merged.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Test your changes (`python test_vibeagent.py`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to your branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+### Pull Request Process
+
+- **Review**: Maintainers and community members review your code
+- **Feedback**: You may receive suggestions for improvements
+- **Update**: Make any requested changes
+- **Approval**: Once approved, a maintainer will merge your PR
+- **Merge**: Your code becomes part of the main codebase!
+
+**Note**: Your work is never deleted during review - it stays in your branch until merged.
+
+For detailed guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 📄 License
 
