@@ -231,6 +231,124 @@ def download_file(filename):
     return jsonify({'error': 'File not found'}), 404
 
 
+@app.route('/api/scan/mev', methods=['POST'])
+def scan_mev():
+    """Scan for MEV opportunities"""
+    if not agent:
+        return jsonify({'error': 'Agent not initialized'}), 400
+    
+    data = request.json
+    token_a = data.get('token_a')
+    token_b = data.get('token_b')
+    dexes = data.get('dexes', ['uniswap_v3', 'sushiswap'])
+    min_profit = data.get('min_profit_usd', 50.0)
+    
+    try:
+        opportunity = agent.analyze_mev_opportunity(
+            token_pair=(token_a, token_b),
+            dexes=dexes,
+            min_profit_usd=min_profit
+        )
+        
+        return jsonify({
+            'success': True,
+            'opportunity': opportunity
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/mev/analyze', methods=['POST'])
+def analyze_mev_risk():
+    """Analyze MEV risks for a strategy"""
+    if not agent:
+        return jsonify({'error': 'Agent not initialized'}), 400
+    
+    data = request.json
+    strategy = data.get('strategy')
+    
+    if not strategy:
+        return jsonify({'error': 'No strategy provided'}), 400
+    
+    try:
+        # Validate MEV bot is initialized
+        if not hasattr(agent, 'mev_bot') or agent.mev_bot is None:
+            return jsonify({'error': 'MEV bot not initialized. Please reinitialize the agent.'}), 400
+        
+        # Get frontrunning analysis
+        frontrun_analysis = agent.mev_bot.analyze_frontrunning_risk(strategy)
+        
+        # Get sandwich attack analysis
+        sandwich_analysis = agent.mev_bot.analyze_sandwich_risk(strategy)
+        
+        return jsonify({
+            'success': True,
+            'frontrunning': frontrun_analysis,
+            'sandwich': sandwich_analysis,
+            'overall_risk': max(
+                frontrun_analysis['mev_risk_score'],
+                sandwich_analysis['sandwich_risk_score']
+            )
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/mev/protection', methods=['POST'])
+def get_mev_protection():
+    """Get MEV protection strategies"""
+    if not agent:
+        return jsonify({'error': 'Agent not initialized'}), 400
+    
+    data = request.json
+    strategy = data.get('strategy')
+    protection_level = data.get('protection_level', 'standard')
+    
+    if not strategy:
+        return jsonify({'error': 'No strategy provided'}), 400
+    
+    try:
+        protection = agent.get_mev_protection_for_strategy(
+            strategy, protection_level
+        )
+        
+        return jsonify({
+            'success': True,
+            'protection': protection
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/mev/education', methods=['GET'])
+def get_mev_education():
+    """Get educational content about MEV"""
+    if not agent:
+        return jsonify({'error': 'Agent not initialized'}), 400
+    
+    try:
+        education = agent.get_mev_education()
+        
+        return jsonify({
+            'success': True,
+            'education': education
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
 def run_server(host='0.0.0.0', port=5000, debug=False):
     """Run the Flask server"""
     app.run(host=host, port=port, debug=debug)
