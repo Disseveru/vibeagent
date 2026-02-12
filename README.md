@@ -12,6 +12,7 @@ VibeAgent is an intelligent coding assistant that helps you create and execute s
 - 🔄 **Autonomous Arbitrage Agent**: Continuously scans and executes profitable opportunities automatically
 - 💎 **Flashloan Arbitrage**: Find price differences across DEXes and profit with zero capital
 - 🎯 **Smart Liquidations**: Identify and execute profitable liquidations on lending protocols
+- 💳 **Reown AppKit Wallet Integration**: Connect with 300+ wallets including MetaMask, Trust Wallet, Coinbase Wallet, Rainbow, and more
 - 🔐 **Avocado Multi-Sig Integration**: Seamlessly integrates with Instadapp's Avocado wallet transaction builder
 - 🛡️ **Safety Checks**: Configurable profit thresholds, gas limits, and blacklists
 - 📊 **Real-Time Dashboard**: Live monitoring of scans, executions, and profits
@@ -19,6 +20,20 @@ VibeAgent is an intelligent coding assistant that helps you create and execute s
 - ⚡ **CLI Support**: Command-line interface for quick operations
 - 🔗 **Multi-Chain**: Supports Ethereum, Polygon, and Arbitrum
 - 📱 **Android PWA Support**: Install as a native-like app on Android devices
+
+## 💳 Wallet Integration (NEW!)
+
+VibeAgent now supports seamless wallet connection through Reown AppKit:
+
+- **300+ Wallets Supported**: MetaMask, Trust Wallet, Coinbase Wallet, Rainbow, Ledger, and more
+- **One-Click Connection**: Simply click "Connect Wallet" and choose your preferred wallet
+- **Real-Time Balance**: See your wallet balance update in real-time
+- **Network Switching**: Easily switch between Ethereum, Polygon, and Arbitrum
+- **Transaction History**: View all your transactions with blockchain explorer links
+- **Safety First**: Manual approval mode, minimum profit thresholds, and gas price limits
+- **Your Wallet, Your Control**: You maintain full custody of your funds
+
+See the [Wallet Integration Guide](docs/WALLET_INTEGRATION.md) for detailed setup and usage.
 
 ## 🤖 Autonomous Agent
 

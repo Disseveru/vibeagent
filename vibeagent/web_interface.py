@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, jsonify, send_file, send_from
 from flask_cors import CORS
 import os
 import json
+import threading
 from datetime import datetime
 from vibeagent.agent import VibeAgent
 from vibeagent.avocado_integration import AvocadoIntegration
@@ -26,6 +27,10 @@ avocado = None
 config = AgentConfig()
 logger = VibeLogger(log_file=config.log_file, log_level=config.log_level)
 autonomous_scanner = None
+
+# Wallet connection state (thread-safe)
+wallet_connections = {}
+wallet_connections_lock = threading.Lock()
 
 
 @app.route("/")
@@ -204,6 +209,116 @@ def download_file(filename):
     if os.path.exists(filepath):
         return send_file(filepath, as_attachment=True)
     return jsonify({"error": "File not found"}), 404
+
+
+# Wallet Connection Endpoints (Reown AppKit Integration)
+
+
+@app.route("/api/wallet/connect", methods=["POST"])
+def wallet_connect():
+    """Handle wallet connection from frontend"""
+    data = request.json
+    address = data.get("address")
+    chain_id = data.get("chainId")
+
+    if not address:
+        return jsonify({"success": False, "error": "No address provided"}), 400
+
+    try:
+        # Store wallet connection state (thread-safe)
+        with wallet_connections_lock:
+            wallet_connections[address] = {
+                "address": address,
+                "chainId": chain_id,
+                "connected_at": datetime.now().isoformat(),
+            }
+
+        logger.info(f"Wallet connected: {address} on chain {chain_id}")
+
+        return jsonify(
+            {
+                "success": True,
+                "message": "Wallet connected successfully",
+                "address": address,
+                "chainId": chain_id,
+            }
+        )
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
+
+@app.route("/api/wallet/disconnect", methods=["POST"])
+def wallet_disconnect():
+    """Handle wallet disconnection"""
+    data = request.json
+    address = data.get("address")
+
+    with wallet_connections_lock:
+        if address and address in wallet_connections:
+            del wallet_connections[address]
+            logger.info(f"Wallet disconnected: {address}")
+
+    return jsonify({"success": True, "message": "Wallet disconnected"})
+
+
+@app.route("/api/wallet/balance/<address>", methods=["GET"])
+def get_wallet_balance(address):
+    """Get wallet balance from blockchain"""
+    if not agent:
+        return jsonify({"error": "Agent not initialized"}), 400
+
+    try:
+        # Use agent's web3 connection to get balance
+        balance_wei = agent.w3.eth.get_balance(address)
+        balance_eth = balance_wei / 1e18
+
+        return jsonify(
+            {
+                "success": True,
+                "address": address,
+                "balance": balance_eth,
+                "balance_wei": str(balance_wei),
+            }
+        )
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
+
+@app.route("/api/wallet/transaction/<tx_hash>", methods=["GET"])
+def get_transaction(tx_hash):
+    """Get transaction details"""
+    if not agent:
+        return jsonify({"error": "Agent not initialized"}), 400
+
+    try:
+        tx = agent.w3.eth.get_transaction(tx_hash)
+        receipt = agent.w3.eth.get_transaction_receipt(tx_hash)
+
+        return jsonify(
+            {
+                "success": True,
+                "transaction": {
+                    "hash": tx_hash,
+                    "from": tx["from"],
+                    "to": tx["to"],
+                    "value": str(tx["value"]),
+                    "gas": tx["gas"],
+                    "gasPrice": str(tx["gasPrice"]),
+                    "status": receipt["status"] if receipt else None,
+                    "blockNumber": receipt["blockNumber"] if receipt else None,
+                },
+            }
+        )
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
+
+@app.route("/api/wallet/state", methods=["GET"])
+def get_wallet_state():
+    """Get current wallet connection state"""
+    with wallet_connections_lock:
+        connections = list(wallet_connections.values())
+    return jsonify({"success": True, "connections": connections})
 
 
 # Autonomous Scanner Endpoints

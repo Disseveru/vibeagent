@@ -265,7 +265,147 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        
+        /* Wallet Connection Styles */
+        .wallet-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .wallet-section h2 {
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .wallet-connected {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .wallet-address,
+        .wallet-balance,
+        .wallet-network {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .wallet-address .address {
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .wallet-balance .balance {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .copy-btn,
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .copy-btn:hover,
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .wallet-disconnected {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .wallet-info-text {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        
+        #walletStatus {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .wallet-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .wallet-buttons button {
+            flex: 1;
+        }
+        
+        /* Transaction display styles */
+        .transaction-list {
+            margin-top: 20px;
+        }
+        
+        .transaction-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .transaction-hash {
+            font-family: monospace;
+            font-size: 0.85em;
+            word-break: break-all;
+        }
+        
+        .transaction-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .transaction-status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .transaction-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .transaction-status.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .explorer-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .explorer-link:hover {
+            text-decoration: underline;
+        }
     </style>
+    <!-- Load Reown Wallet Integration -->
+    <script src="/static/reown-wallet.js"></script>
 </head>
 <body>
     <div class="container">
@@ -274,20 +414,42 @@
         
         <div id="statusMessage"></div>
         
+        <!-- Wallet Connection Section (Reown AppKit) -->
+        <div class="wallet-section">
+            <h2>💳 Wallet Connection</h2>
+            <div id="walletInfo">
+                <div class="wallet-disconnected">
+                    <p>Connect your wallet to start using VibeAgent</p>
+                    <p class="wallet-info-text">
+                        Supports 300+ wallets including MetaMask, Trust Wallet, Coinbase Wallet, Rainbow, and more
+                    </p>
+                </div>
+            </div>
+            <div class="wallet-buttons">
+                <button id="connectWalletBtn" onclick="connectWallet()">🔗 Connect Wallet</button>
+                <button id="disconnectWalletBtn" onclick="disconnectWallet()" style="display: none;">❌ Disconnect</button>
+            </div>
+            <div id="walletStatus" class="status-message"></div>
+        </div>
+        
         <!-- Configuration Section -->
         <div class="section">
             <h2>⚙️ Configuration</h2>
             <div class="form-group">
                 <label for="network">Select Network:</label>
-                <select id="network">
+                <select id="network" onchange="onNetworkChange()">
                     <option value="ethereum">Ethereum Mainnet</option>
                     <option value="polygon">Polygon</option>
                     <option value="arbitrum">Arbitrum</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="walletAddress">Avocado Multi-Sig Wallet Address:</label>
-                <input type="text" id="walletAddress" placeholder="0x..." />
+                <label for="walletAddress">Avocado Multi-Sig Wallet Address (Optional):</label>
+                <input type="text" id="walletAddress" placeholder="0x... (or use connected wallet)" />
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    If you have connected a wallet above, you can leave this empty to use that address. 
+                    Or enter a different Avocado multi-sig address here.
+                </small>
             </div>
             <button onclick="initializeAgent()">Initialize Agent</button>
         </div>
@@ -349,6 +511,12 @@
             <div id="recentOpportunities" class="result-box hidden" style="margin-top: 15px;">
                 <h3>Recent Opportunities</h3>
                 <div id="opportunitiesContent"></div>
+            </div>
+            
+            <!-- Transaction History -->
+            <div id="transactionHistory" class="result-box hidden" style="margin-top: 15px;">
+                <h3>Transaction History</h3>
+                <div id="transactionList" class="transaction-list"></div>
             </div>
         </div>
         
@@ -463,13 +631,30 @@
             document.getElementById(`${tabName}-tab`).classList.add('active');
         }
         
+        // Handle network change from dropdown
+        async function onNetworkChange() {
+            const network = document.getElementById('network').value;
+            const walletState = getWalletState();
+            
+            if (walletState.connected) {
+                // Switch network in wallet
+                await switchNetwork(network);
+            }
+        }
+        
         async function initializeAgent() {
             const network = document.getElementById('network').value;
-            const walletAddress = document.getElementById('walletAddress').value;
+            let walletAddress = document.getElementById('walletAddress').value;
             
+            // If no wallet address entered, try to use connected wallet
             if (!walletAddress) {
-                showStatus('Please enter your Avocado wallet address', 'error');
-                return;
+                const walletState = getWalletState();
+                if (walletState.connected) {
+                    walletAddress = walletState.address;
+                } else {
+                    showStatus('Please connect your wallet or enter an Avocado wallet address', 'error');
+                    return;
+                }
             }
             
             try {
@@ -740,6 +925,9 @@
                 scan_interval_seconds: parseInt(document.getElementById('scanInterval').value)
             };
             
+            // Also update wallet safety settings
+            updateSafetySettingsFromUI();
+            
             try {
                 const response = await fetch('/api/autonomous/config', {
                     method: 'POST',
@@ -966,6 +1154,55 @@
             } catch (error) {
                 showStatus(`Error: ${error.message}`, 'error');
             }
+        }
+        
+        // Transaction Display Functions
+        function displayTransaction(tx, networkName = 'ethereum') {
+            const txList = document.getElementById('transactionList');
+            if (!txList) return;
+            
+            const txItem = document.createElement('div');
+            txItem.className = 'transaction-item';
+            txItem.innerHTML = `
+                <div>
+                    <strong>Transaction Hash:</strong>
+                    <div class="transaction-hash">
+                        <a href="${getExplorerUrl(tx.hash, networkName)}" 
+                           target="_blank" 
+                           class="explorer-link">${tx.hash}</a>
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <strong>Status:</strong>
+                    <span class="transaction-status ${tx.status || 'pending'}">${tx.status || 'Pending'}</span>
+                </div>
+                ${tx.profit ? `<div style="margin-top: 10px;"><strong>Profit:</strong> $${tx.profit.toFixed(2)}</div>` : ''}
+                ${tx.timestamp ? `<div style="margin-top: 5px; color: #666; font-size: 0.9em;">${new Date(tx.timestamp).toLocaleString()}</div>` : ''}
+            `;
+            
+            txList.insertBefore(txItem, txList.firstChild);
+            
+            // Keep only last 20 transactions
+            while (txList.children.length > 20) {
+                txList.removeChild(txList.lastChild);
+            }
+        }
+        
+        // Update safety settings based on UI inputs
+        function updateSafetySettingsFromUI() {
+            const settings = {
+                manualApproval: document.getElementById('requireApproval')?.checked ?? true,
+                minProfitUsd: parseFloat(document.getElementById('minProfit')?.value ?? 50),
+                maxGasPriceGwei: parseFloat(document.getElementById('maxGas')?.value ?? 100)
+            };
+            
+            updateSafetySettings(settings);
+            console.log('Safety settings updated:', settings);
+        }
+        
+        // Call this when autonomous mode settings change
+        function onAutonomousSettingsChange() {
+            updateSafetySettingsFromUI();
         }
         
         // PWA Service Worker Registration
