@@ -265,6 +265,160 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        
+        /* Wallet Connect Styles */
+        .wallet-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+        
+        .wallet-input-group input {
+            flex: 1;
+        }
+        
+        .btn-connect {
+            background: linear-gradient(135deg, #3b99fc 0%, #2b78c2 100%);
+            white-space: nowrap;
+            min-width: 140px;
+        }
+        
+        .btn-connect:hover {
+            box-shadow: 0 10px 20px rgba(59, 153, 252, 0.4);
+        }
+        
+        .btn-disconnect {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            white-space: nowrap;
+            min-width: 140px;
+        }
+        
+        .wallet-status {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .wallet-status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .wallet-status.disconnected {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+        
+        .wallet-status .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .wallet-status.connected .status-dot {
+            background: #28a745;
+        }
+        
+        .wallet-status.disconnected .status-dot {
+            background: #6c757d;
+        }
+        
+        .wallet-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        
+        .wallet-info .chain-name {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* WalletConnect Modal Overlay */
+        .wc-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        
+        .wc-modal {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .wc-modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .wc-modal p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .wc-modal .wallet-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .wc-modal .wallet-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .wc-modal .wallet-option:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+        
+        .wc-modal .wallet-option img {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+        }
+        
+        .wc-modal .wallet-option span {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .wc-modal .close-btn {
+            margin-top: 20px;
+            background: #6c757d;
+        }
+        
+        /* Info link styling for instructions */
+        .info-link {
+            color: #0c5460;
+        }
+        
+        .instructions-help {
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
@@ -287,7 +441,17 @@
             </div>
             <div class="form-group">
                 <label for="walletAddress">Avocado Multi-Sig Wallet Address:</label>
-                <input type="text" id="walletAddress" placeholder="0x..." />
+                <div class="wallet-input-group">
+                    <input type="text" id="walletAddress" placeholder="0x..." />
+                    <button id="connectWalletBtn" class="btn-connect" onclick="openWalletModal()">🔗 Connect Wallet</button>
+                </div>
+                <div id="walletStatus" class="wallet-status disconnected">
+                    <div class="status-dot"></div>
+                    <div class="wallet-info">
+                        <span id="walletStatusText">Not connected</span>
+                        <span class="chain-name" id="chainName"></span>
+                    </div>
+                </div>
             </div>
             <button onclick="initializeAgent()">Initialize Agent</button>
         </div>
@@ -435,8 +599,250 @@
         </div>
     </div>
     
+    <!-- Wallet Connect Modal -->
+    <div id="walletModal" class="wc-modal-overlay" style="display: none;">
+        <div class="wc-modal">
+            <h3>🔗 Connect Your Wallet</h3>
+            <p>Choose how you want to connect your Avocado wallet</p>
+            <div class="wallet-options">
+                <div class="wallet-option" onclick="connectWithMetaMask()">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" onerror="this.style.display='none'">
+                    <span>MetaMask / Browser Wallet</span>
+                </div>
+                <div class="wallet-option" onclick="connectWithWalletConnect()">
+                    <img src="https://avatars.githubusercontent.com/u/37784886?s=200&v=4" alt="WalletConnect" onerror="this.style.display='none'">
+                    <span>WalletConnect</span>
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeWalletModal()">Cancel</button>
+        </div>
+    </div>
+    
     <script>
         let currentStrategy = null;
+        let connectedWallet = null;
+        
+        // Wallet Connection State
+        const CHAIN_NAMES = {
+            1: 'Ethereum Mainnet',
+            137: 'Polygon',
+            42161: 'Arbitrum'
+        };
+        
+        const CHAIN_TO_NETWORK = {
+            1: 'ethereum',
+            137: 'polygon',
+            42161: 'arbitrum'
+        };
+        
+        // Constants
+        const INSTRUCTIONS_DISPLAY_DURATION_MS = 15000;
+        
+        // Helper function to parse chain ID safely
+        function parseChainId(chainIdValue) {
+            if (!chainIdValue) return null;
+            const parsed = typeof chainIdValue === 'string' 
+                ? parseInt(chainIdValue, 16) 
+                : chainIdValue;
+            return isNaN(parsed) ? null : parsed;
+        }
+        
+        // Wallet Modal Functions
+        function openWalletModal() {
+            document.getElementById('walletModal').style.display = 'flex';
+        }
+        
+        function closeWalletModal() {
+            document.getElementById('walletModal').style.display = 'none';
+        }
+        
+        // Connect with MetaMask/Browser Wallet
+        async function connectWithMetaMask() {
+            closeWalletModal();
+            
+            if (typeof window.ethereum === 'undefined') {
+                showStatus('MetaMask or browser wallet not detected. Please install MetaMask or use WalletConnect.', 'error');
+                return;
+            }
+            
+            showStatus('Connecting to wallet...', 'info');
+            
+            try {
+                // Request account access
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                
+                if (accounts.length === 0) {
+                    showStatus('No accounts found. Please unlock your wallet.', 'error');
+                    return;
+                }
+                
+                const address = accounts[0];
+                const chainIdRaw = await window.ethereum.request({ method: 'eth_chainId' });
+                const chainId = parseChainId(chainIdRaw);
+                
+                if (chainId === null) {
+                    showStatus('Could not determine network. Please check your wallet connection.', 'error');
+                    return;
+                }
+                
+                // Update UI
+                updateWalletConnection(address, chainId, 'metamask');
+                
+                // Listen for account changes
+                window.ethereum.on('accountsChanged', handleAccountsChanged);
+                window.ethereum.on('chainChanged', handleChainChanged);
+                
+                showStatus('Wallet connected successfully!', 'success');
+                
+            } catch (error) {
+                console.error('MetaMask connection error:', error);
+                if (error.code === 4001) {
+                    showStatus('Connection rejected by user.', 'error');
+                } else {
+                    showStatus(`Connection error: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        // Connect with WalletConnect
+        async function connectWithWalletConnect() {
+            closeWalletModal();
+            showStatus('WalletConnect requires the @walletconnect/modal package. For now, please use MetaMask or manually enter your Avocado wallet address.', 'info');
+            
+            // Note: Full WalletConnect v2 integration would require adding the SDK
+            // For a pure HTML/JS implementation, users can:
+            // 1. Use MetaMask with their EOA to derive their Avocado address
+            // 2. Manually enter their Avocado wallet address
+            // 3. Future: Add WalletConnect SDK integration
+            
+            // Show instructions for manual entry
+            const instructionsDiv = document.createElement('div');
+            instructionsDiv.className = 'status info instructions-help';
+            instructionsDiv.innerHTML = `
+                <strong>💡 How to find your Avocado wallet address:</strong><br>
+                1. Go to <a href="https://avocado.instadapp.io" target="_blank" class="info-link">avocado.instadapp.io</a><br>
+                2. Connect your wallet there<br>
+                3. Copy your Avocado Smart Account address<br>
+                4. Paste it in the field above
+            `;
+            instructionsDiv.style.marginTop = '15px';
+            
+            const walletStatus = document.getElementById('walletStatus');
+            walletStatus.parentNode.insertBefore(instructionsDiv, walletStatus.nextSibling);
+            
+            setTimeout(() => {
+                instructionsDiv.remove();
+            }, INSTRUCTIONS_DISPLAY_DURATION_MS);
+        }
+        
+        // Update wallet connection UI
+        function updateWalletConnection(address, chainId, provider) {
+            connectedWallet = { address, chainId, provider };
+            
+            // Update wallet address input
+            document.getElementById('walletAddress').value = address;
+            
+            // Update network dropdown to match connected chain
+            if (CHAIN_TO_NETWORK[chainId]) {
+                document.getElementById('network').value = CHAIN_TO_NETWORK[chainId];
+            }
+            
+            // Update status display
+            const walletStatus = document.getElementById('walletStatus');
+            walletStatus.classList.remove('disconnected');
+            walletStatus.classList.add('connected');
+            
+            const shortAddress = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+            document.getElementById('walletStatusText').textContent = `Connected: ${shortAddress}`;
+            document.getElementById('chainName').textContent = CHAIN_NAMES[chainId] || `Chain ID: ${chainId}`;
+            
+            // Update button to show disconnect option
+            const connectBtn = document.getElementById('connectWalletBtn');
+            connectBtn.textContent = '🔌 Disconnect';
+            connectBtn.classList.remove('btn-connect');
+            connectBtn.classList.add('btn-disconnect');
+            connectBtn.onclick = disconnectWallet;
+        }
+        
+        // Disconnect wallet
+        function disconnectWallet() {
+            connectedWallet = null;
+            
+            // Clear wallet address input
+            document.getElementById('walletAddress').value = '';
+            
+            // Update status display
+            const walletStatus = document.getElementById('walletStatus');
+            walletStatus.classList.remove('connected');
+            walletStatus.classList.add('disconnected');
+            
+            document.getElementById('walletStatusText').textContent = 'Not connected';
+            document.getElementById('chainName').textContent = '';
+            
+            // Update button back to connect
+            const connectBtn = document.getElementById('connectWalletBtn');
+            connectBtn.textContent = '🔗 Connect Wallet';
+            connectBtn.classList.remove('btn-disconnect');
+            connectBtn.classList.add('btn-connect');
+            connectBtn.onclick = openWalletModal;
+            
+            // Remove event listeners if MetaMask
+            if (window.ethereum) {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+                window.ethereum.removeListener('chainChanged', handleChainChanged);
+            }
+            
+            showStatus('Wallet disconnected', 'info');
+        }
+        
+        // Handle account changes
+        function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                disconnectWallet();
+            } else if (connectedWallet && accounts[0] !== connectedWallet.address) {
+                updateWalletConnection(accounts[0], connectedWallet.chainId, connectedWallet.provider);
+                showStatus('Account changed', 'info');
+            }
+        }
+        
+        // Handle chain changes
+        function handleChainChanged(chainIdHex) {
+            const chainId = parseChainId(chainIdHex);
+            if (chainId === null) {
+                showStatus('Unable to determine network. Please check your wallet.', 'error');
+                return;
+            }
+            if (connectedWallet) {
+                updateWalletConnection(connectedWallet.address, chainId, connectedWallet.provider);
+                showStatus(`Network changed to ${CHAIN_NAMES[chainId] || 'Chain ' + chainId}`, 'info');
+            }
+        }
+        
+        // Check for existing connection on page load
+        async function checkExistingConnection() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    if (accounts.length > 0) {
+                        const chainIdRaw = await window.ethereum.request({ method: 'eth_chainId' });
+                        const chainId = parseChainId(chainIdRaw);
+                        
+                        if (chainId !== null) {
+                            updateWalletConnection(accounts[0], chainId, 'metamask');
+                            
+                            // Set up listeners
+                            window.ethereum.on('accountsChanged', handleAccountsChanged);
+                            window.ethereum.on('chainChanged', handleChainChanged);
+                        }
+                    }
+                } catch (error) {
+                    console.log('No existing connection:', error);
+                }
+            }
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', checkExistingConnection);
         
         function showStatus(message, type = 'info') {
             const statusDiv = document.getElementById('statusMessage');
@@ -468,7 +874,7 @@
             const walletAddress = document.getElementById('walletAddress').value;
             
             if (!walletAddress) {
-                showStatus('Please enter your Avocado wallet address', 'error');
+                showStatus('Please enter your Avocado wallet address or use Connect Wallet', 'error');
                 return;
             }
             
@@ -482,7 +888,8 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    showStatus(`Agent initialized on ${data.network}!`, 'success');
+                    const connectionType = connectedWallet ? ' (connected via wallet)' : '';
+                    showStatus(`Agent initialized on ${data.network}${connectionType}!`, 'success');
                 } else {
                     showStatus(`Error: ${data.error}`, 'error');
                 }
