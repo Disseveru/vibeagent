@@ -410,7 +410,7 @@
     <div id="landing" class="landing">
         <div class="hero-card">
             <h1>⚡ VibeAgent</h1>
-            <p>Connect your Reown wallet to stream real-time arbitrage, liquidation, and cross-chain discrepancies. Lightning-fast paths are lined up for you to pick and execute without needing to code.</p>
+            <p>Connect your Reown wallet to stream real-time arbitrage, liquidation, and cross-chain spreads. Lightning-fast paths are lined up for you to pick and execute without writing code.</p>
             <button class="reown-btn" onclick="connectWallet()">Connect with Reown</button>
             <div id="connectStatus" class="status info hidden" style="margin-top: 18px;"></div>
         </div>
@@ -429,7 +429,7 @@
             
             <div class="section">
                 <h2>📡 Live Opportunity Streams</h2>
-                <p style="color: #94a3b8; margin-bottom: 10px;">Trending plays update in real time with network visuals so you can jump in instantly.</p>
+                <p style="color: #94a3b8; margin-bottom: 10px;">Trending plays update in real time with network visuals so you can jump in instantly. (Preview data shown until live feeds load.)</p>
                 <div class="streams">
                     <div class="stream-card">
                         <div class="stream-title">
@@ -641,6 +641,25 @@
                 { pair: "OP → ETH", network: "OP → Arb", spread: 0.63, depth: 410000, icon: "◎" }
             ]
         };
+        // Live-feed simulation tunables
+        const liveFeedUpdateIntervalMs = 4000; // update cadence in milliseconds
+        const arbSpreadVariance = 0.4; // variance window for arbitrage spread jitter
+        const arbSpreadOffset = 0.2; // offset to keep variance centered
+        const healthVariance = 0.02; // variance window for health factor jitter
+        const healthOffset = 0.01; // offset to keep health centered
+        const healthThresholdWarning = 1.04; // threshold to highlight risky liquidations
+        const crossSpreadVariance = 0.25; // variance window for cross-chain spread jitter
+        const crossSpreadOffset = 0.12; // offset to keep cross-chain spreads centered
+        const minDepthUsd = 250000; // minimum liquidity depth to display
+        const minDebtUsd = 50000; // minimum debt amount to display in liquidation feed
+        const depthDriftFloor = 0.985; // floor multiplier for depth drift
+        const depthDriftRange = 0.03; // range multiplier for depth drift
+        const debtDriftFloor = 0.98; // floor multiplier for debt drift
+        const debtDriftRange = 0.03; // range multiplier for debt drift
+        const healthFloor = 0.96; // minimum health to bound jitter
+        const warningColor = '#f97316'; // accent for risky values
+        const okColor = '#7ad7f0'; // accent for stable values
+        const walletUserRejectedErrorCode = 4001; // provider error code for user rejection
         
         function formatAddress(addr) {
             return addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : '';
@@ -650,6 +669,19 @@
             return `$${Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
         }
         
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+        
+        function jitterDelta(variance, offset) {
+            return Math.random() * variance - offset;
+        }
+        
         async function connectWallet() {
             const connectStatus = document.getElementById('connectStatus');
             connectStatus.classList.remove('hidden', 'error', 'success');
@@ -657,7 +689,7 @@
             connectStatus.textContent = 'Requesting wallet connection...';
             
             if (!window.ethereum) {
-                connectStatus.textContent = 'Reown connect needs a browser wallet (e.g., MetaMask).';
+                connectStatus.textContent = 'No browser wallet detected. Please install a wallet (e.g., MetaMask) to connect.';
                 connectStatus.classList.remove('info');
                 connectStatus.classList.add('error');
                 return;
@@ -668,23 +700,31 @@
                 connectedWallet = accounts[0];
                 
                 document.getElementById('walletAddress').value = connectedWallet;
-                document.getElementById('landing').classList.add('hidden');
-                document.getElementById('appContent').classList.remove('hidden');
-                
                 const badge = document.getElementById('connectedBadge');
                 badge.textContent = `Connected: ${formatAddress(connectedWallet)}`;
                 badge.classList.remove('hidden');
                 
-                connectStatus.textContent = 'Reown wallet connected';
+                connectStatus.textContent = 'Wallet successfully connected';
                 connectStatus.classList.remove('info');
                 connectStatus.classList.add('success');
+                connectStatus.classList.remove('hidden');
                 
-                showStatus('Reown wallet connected — ready to stream opportunities.', 'success');
+                setTimeout(() => {
+                    document.getElementById('landing').classList.add('hidden');
+                    document.getElementById('appContent').classList.remove('hidden');
+                }, 350);
+                
+                showStatus('Wallet connected — ready to stream opportunities.', 'success');
                 startLiveTicker();
             } catch (error) {
-                connectStatus.textContent = error?.message || 'Connection rejected';
+                const userRejected = error?.code === walletUserRejectedErrorCode;
+                const friendlyMessage = userRejected ? 'Connection request was rejected in your wallet.' : 'Wallet connection failed. Please retry.';
+                const errorDetails = error?.message || error?.code || error?.toString() || friendlyMessage;
+                connectStatus.textContent = friendlyMessage;
                 connectStatus.classList.remove('info');
                 connectStatus.classList.add('error');
+                showStatus(friendlyMessage, 'error');
+                console.error('Wallet connection error', errorDetails);
             }
         }
         
@@ -694,26 +734,26 @@
             liveInterval = setInterval(() => {
                 updateLiveFeeds();
                 renderStreams();
-            }, 4000);
+            }, liveFeedUpdateIntervalMs);
         }
         
         function updateLiveFeeds() {
             liveFeeds.arbitrage = liveFeeds.arbitrage.map(item => ({
                 ...item,
-                spread: Math.max(0, item.spread + (Math.random() * 0.4 - 0.2)),
-                depth: Math.max(250000, item.depth * (0.985 + Math.random() * 0.03))
+                spread: Math.max(0, item.spread + jitterDelta(arbSpreadVariance, arbSpreadOffset)),
+                depth: Math.max(minDepthUsd, item.depth * (depthDriftFloor + Math.random() * depthDriftRange))
             }));
             
             liveFeeds.liquidation = liveFeeds.liquidation.map(item => ({
                 ...item,
-                health: Math.max(0.96, item.health + (Math.random() * 0.02 - 0.01)),
-                debt: Math.max(50000, item.debt * (0.98 + Math.random() * 0.03))
+                health: Math.max(healthFloor, item.health + jitterDelta(healthVariance, healthOffset)),
+                debt: Math.max(minDebtUsd, item.debt * (debtDriftFloor + Math.random() * debtDriftRange))
             }));
             
             liveFeeds.cross = liveFeeds.cross.map(item => ({
                 ...item,
-                spread: Math.max(0, item.spread + (Math.random() * 0.25 - 0.12)),
-                depth: Math.max(250000, item.depth * (0.985 + Math.random() * 0.03))
+                spread: Math.max(0, item.spread + jitterDelta(crossSpreadVariance, crossSpreadOffset)),
+                depth: Math.max(minDepthUsd, item.depth * (depthDriftFloor + Math.random() * depthDriftRange))
             }));
         }
         
@@ -727,15 +767,15 @@
             arbEl.innerHTML = liveFeeds.arbitrage.map(item => `
                 <div class="tile">
                     <div style="display:flex; gap:12px; align-items:center;">
-                        <div class="avatar">${item.icon}</div>
+                        <div class="avatar">${escapeHtml(item.icon)}</div>
                         <div>
-                                <div class="pair">${item.pair}</div>
-                                <div class="meta">
-                                    <span class="network-badge">${item.network}</span>
-                                    <span>${formatUsd(item.depth)} depth</span>
-                                </div>
+                            <div class="pair">${escapeHtml(item.pair)}</div>
+                            <div class="meta">
+                                <span class="network-badge">${escapeHtml(item.network)}</span>
+                                <span>${formatUsd(item.depth)} depth</span>
                             </div>
                         </div>
+                    </div>
                     <div class="metric">${item.spread.toFixed(2)}%</div>
                 </div>
             `).join('');
@@ -743,31 +783,31 @@
             liqEl.innerHTML = liveFeeds.liquidation.map(item => `
                 <div class="tile">
                     <div style="display:flex; gap:12px; align-items:center;">
-                        <div class="avatar">${item.icon}</div>
+                        <div class="avatar">${escapeHtml(item.icon)}</div>
                         <div>
-                                <div class="pair">${item.account}</div>
-                                <div class="meta">
-                                    <span class="network-badge">${item.network}</span>
-                                    <span>${formatUsd(item.debt)} debt</span>
-                                </div>
+                            <div class="pair">${escapeHtml(item.account)}</div>
+                            <div class="meta">
+                                <span class="network-badge">${escapeHtml(item.network)}</span>
+                                <span>${formatUsd(item.debt)} debt</span>
                             </div>
                         </div>
-                    <div class="metric" style="color:${item.health < 1.04 ? '#f97316' : '#7ad7f0'};">HL: ${item.health.toFixed(2)}</div>
+                    </div>
+                    <div class="metric" style="color:${item.health < healthThresholdWarning ? warningColor : okColor};">HL: ${item.health.toFixed(2)}</div>
                 </div>
             `).join('');
             
             xchainEl.innerHTML = liveFeeds.cross.map(item => `
                 <div class="tile">
                     <div style="display:flex; gap:12px; align-items:center;">
-                        <div class="avatar">${item.icon}</div>
+                        <div class="avatar">${escapeHtml(item.icon)}</div>
                         <div>
-                                <div class="pair">${item.pair}</div>
-                                <div class="meta">
-                                    <span class="network-badge">${item.network}</span>
-                                    <span>${formatUsd(item.depth)} route</span>
-                                </div>
+                            <div class="pair">${escapeHtml(item.pair)}</div>
+                            <div class="meta">
+                                <span class="network-badge">${escapeHtml(item.network)}</span>
+                                <span>${formatUsd(item.depth)} route</span>
                             </div>
                         </div>
+                    </div>
                     <div class="metric">${item.spread.toFixed(2)}%</div>
                 </div>
             `).join('');
@@ -785,8 +825,13 @@
         }
         
         function switchTab(tabName, evt) {
+            const allowedTabs = ['arbitrage', 'liquidation'];
+            const safeTab = allowedTabs.find(tab => tab === tabName);
+            if (!safeTab) return;
+            
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            const target = evt?.target || document.querySelector(`.tab[data-tab="${tabName}"]`);
+            const safeSelector = (typeof CSS !== 'undefined' && CSS.escape) ? CSS.escape(safeTab) : safeTab.replace(/[^a-z0-9_-]/gi, '');
+            const target = evt?.target || document.querySelector(`.tab[data-tab="${safeSelector}"]`);
             if (target) {
                 target.classList.add('active');
             }
@@ -794,7 +839,7 @@
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
-            document.getElementById(`${tabName}-tab`).classList.add('active');
+            document.getElementById(`${safeTab}-tab`).classList.add('active');
         }
         
         async function initializeAgent() {
