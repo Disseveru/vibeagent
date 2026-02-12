@@ -2,15 +2,16 @@
 Instadapp Avocado Multi-Sig Wallet Integration
 Converts strategies into Avocado-compatible transaction batches
 """
-import os
+
 from typing import Dict, List, Any, Optional
 from web3 import Web3
-from eth_account import Account
 import json
 from datetime import datetime
 from .contract_abis import (
-    ERC20_ABI, UNISWAP_V3_ROUTER_ABI, SUSHISWAP_ROUTER_ABI,
-    AAVE_V3_POOL_ABI, CONTRACT_ADDRESSES
+    UNISWAP_V3_ROUTER_ABI,
+    SUSHISWAP_ROUTER_ABI,
+    AAVE_V3_POOL_ABI,
+    CONTRACT_ADDRESSES,
 )
 
 
@@ -19,7 +20,7 @@ class AvocadoIntegration:
     Integration with Instadapp Avocado Multi-Sig Wallet
     Formats transactions for the Avocado transaction builder
     """
-    
+
     # Avocado Multisig ABI (simplified for transaction building)
     AVOCADO_ABI = [
         {
@@ -33,14 +34,14 @@ class AvocadoIntegration:
                         {"name": "target", "type": "address"},
                         {"name": "data", "type": "bytes"},
                         {"name": "value", "type": "uint256"},
-                        {"name": "operation", "type": "uint8"}
-                    ]
+                        {"name": "operation", "type": "uint8"},
+                    ],
                 },
-                {"name": "id", "type": "uint256"}
-            ]
+                {"name": "id", "type": "uint256"},
+            ],
         }
     ]
-    
+
     # Protocol addresses on different networks
     PROTOCOL_ADDRESSES = {
         "ethereum": {
@@ -57,13 +58,13 @@ class AvocadoIntegration:
             "aave_v3_pool": "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
             "uniswap_v3_router": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
             "sushiswap_router": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
-        }
+        },
     }
-    
+
     def __init__(self, wallet_address: str, network: str = "ethereum"):
         """
         Initialize Avocado integration
-        
+
         Args:
             wallet_address: Avocado multi-sig wallet address
             network: Network to operate on
@@ -71,28 +72,25 @@ class AvocadoIntegration:
         self.wallet_address = Web3.to_checksum_address(wallet_address)
         self.network = network
         self.web3 = Web3()  # Utility instance for encoding
-        
-    def strategy_to_avocado_transactions(
-        self,
-        strategy: Dict[str, Any]
-    ) -> Dict[str, Any]:
+
+    def strategy_to_avocado_transactions(self, strategy: Dict[str, Any]) -> Dict[str, Any]:
         """
         Convert a VibeAgent strategy into Avocado transaction builder format
-        
+
         Args:
             strategy: Strategy dictionary from VibeAgent
-            
+
         Returns:
             Avocado-compatible transaction batch
         """
         steps = strategy.get("steps", [])
         actions = []
-        
+
         for step in steps:
             action = self._convert_step_to_action(step)
             if action:
                 actions.append(action)
-        
+
         # Build the transaction batch for Avocado
         return {
             "version": "1.0",
@@ -100,15 +98,15 @@ class AvocadoIntegration:
             "meta": {
                 "name": f"{strategy.get('type', 'Strategy')} Execution",
                 "description": f"Automated {strategy.get('type')} strategy",
-                "createdBy": "VibeAgent"
+                "createdBy": "VibeAgent",
             },
-            "transactions": actions
+            "transactions": actions,
         }
-    
+
     def _convert_step_to_action(self, step: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Convert a strategy step into an Avocado action"""
         action_type = step.get("action")
-        
+
         if action_type == "flash_loan":
             return self._build_flash_loan_action(step)
         elif action_type == "swap":
@@ -118,74 +116,64 @@ class AvocadoIntegration:
         elif action_type == "repay_flash_loan":
             # Usually handled in the flash loan callback
             return None
-        
+
         return None
-    
+
     def _build_flash_loan_action(self, step: Dict[str, Any]) -> Dict[str, Any]:
         """Build flash loan action for Avocado"""
         protocol = step.get("protocol", "aave_v3")
         token = step.get("token")
         amount = step.get("amount", "auto")
-        
+
         # Get protocol address
         pool_address = self.PROTOCOL_ADDRESSES[self.network].get(f"{protocol}_pool")
-        
+
         # Encode flash loan call
         encoded_data = self._encode_flash_loan_call(token, amount)
-        
+
         return {
             "to": pool_address,
             "value": "0",
             "data": encoded_data,
             "operation": 0,  # CALL operation
             "description": f"Flash loan from {protocol}",
-            "meta": {
-                "protocol": protocol,
-                "token": token,
-                "amount": amount
-            }
+            "meta": {"protocol": protocol, "token": token, "amount": amount},
         }
-    
+
     def _build_swap_action(self, step: Dict[str, Any]) -> Dict[str, Any]:
         """Build swap action for Avocado"""
         dex = step.get("dex", "uniswap_v3")
         from_token = step.get("from")
         to_token = step.get("to")
-        
+
         # Get DEX router address
         router_address = self.PROTOCOL_ADDRESSES[self.network].get(f"{dex}_router")
-        
+
         # Encode swap call
         encoded_data = self._encode_swap_call(dex, from_token, to_token)
-        
+
         return {
             "to": router_address,
             "value": "0",
             "data": encoded_data,
             "operation": 0,
             "description": f"Swap on {dex}",
-            "meta": {
-                "dex": dex,
-                "fromToken": from_token,
-                "toToken": to_token
-            }
+            "meta": {"dex": dex, "fromToken": from_token, "toToken": to_token},
         }
-    
+
     def _build_liquidation_action(self, step: Dict[str, Any]) -> Dict[str, Any]:
         """Build liquidation action for Avocado"""
         protocol = step.get("protocol")
         account = step.get("account")
         collateral_token = step.get("collateral_token")
         debt_token = step.get("debt_token")
-        
+
         # Get protocol address
         pool_address = self.PROTOCOL_ADDRESSES[self.network].get(f"{protocol}_pool")
-        
+
         # Encode liquidation call
-        encoded_data = self._encode_liquidation_call(
-            collateral_token, debt_token, account
-        )
-        
+        encoded_data = self._encode_liquidation_call(collateral_token, debt_token, account)
+
         return {
             "to": pool_address,
             "value": "0",
@@ -196,91 +184,84 @@ class AvocadoIntegration:
                 "protocol": protocol,
                 "account": account,
                 "collateralToken": collateral_token,
-                "debtToken": debt_token
-            }
+                "debtToken": debt_token,
+            },
         }
-    
+
     def _get_chain_id(self, network: str) -> int:
         """Get chain ID for network"""
-        chain_ids = {
-            "ethereum": 1,
-            "polygon": 137,
-            "arbitrum": 42161
-        }
+        chain_ids = {"ethereum": 1, "polygon": 137, "arbitrum": 42161}
         return chain_ids.get(network, 1)
-    
+
     def export_for_transaction_builder(
-        self,
-        strategy: Dict[str, Any],
-        filename: Optional[str] = None
+        self, strategy: Dict[str, Any], filename: Optional[str] = None
     ) -> str:
         """
         Export strategy as JSON for Avocado transaction builder
-        
+
         Args:
             strategy: Strategy dict or opportunity dict with 'strategy' key
             filename: Optional filename to save to
-            
+
         Returns:
             JSON string of the transaction batch
         """
         # Handle both opportunity and strategy objects
-        if 'strategy' in strategy and isinstance(strategy['strategy'], dict):
+        if "strategy" in strategy and isinstance(strategy["strategy"], dict):
             # This is an opportunity object, extract the strategy
-            actual_strategy = strategy['strategy']
+            actual_strategy = strategy["strategy"]
         else:
             # This is already a strategy object
             actual_strategy = strategy
-        
+
         transaction_batch = self.strategy_to_avocado_transactions(actual_strategy)
-        
+
         # Add metadata
         transaction_batch["meta"]["timestamp"] = datetime.now().isoformat()
         transaction_batch["meta"]["network"] = self.network
         transaction_batch["meta"]["wallet"] = self.wallet_address
-        transaction_batch["meta"]["estimated_profit"] = actual_strategy.get("estimated_profit_usd", 0)
+        transaction_batch["meta"]["estimated_profit"] = actual_strategy.get(
+            "estimated_profit_usd", 0
+        )
         transaction_batch["meta"]["estimated_gas"] = actual_strategy.get("estimated_gas", 0)
         transaction_batch["meta"]["risk_level"] = self._assess_risk_level(actual_strategy)
-        
+
         json_output = json.dumps(transaction_batch, indent=2)
-        
+
         if filename:
-            with open(filename, 'w') as f:
+            with open(filename, "w") as f:
                 f.write(json_output)
             print(f"Transaction batch saved to {filename}")
-        
+
         return json_output
-    
+
     def _assess_risk_level(self, strategy: Dict[str, Any]) -> str:
         """Assess risk level of strategy"""
         warnings = self._check_strategy_risks(strategy)
-        
+
         if len(warnings) == 0:
             return "low"
         elif len(warnings) <= 2:
             return "medium"
         else:
             return "high"
-    
-    def create_simulation_data(
-        self,
-        strategy: Dict[str, Any]
-    ) -> Dict[str, Any]:
+
+    def create_simulation_data(self, strategy: Dict[str, Any]) -> Dict[str, Any]:
         """
         Create simulation data for testing before execution
-        
+
         Args:
             strategy: Strategy to simulate
-            
+
         Returns:
             Simulation parameters
         """
         total_gas = self._estimate_total_gas(strategy)
         warnings = self._check_strategy_risks(strategy)
-        
+
         # Add 20% safety buffer to gas estimate
         gas_with_buffer = int(total_gas * 1.2)
-        
+
         return {
             "network": self.network,
             "wallet": self.wallet_address,
@@ -295,10 +276,10 @@ class AvocadoIntegration:
                 "Test on fork/testnet first",
                 "Monitor gas prices before execution",
                 "Check for sufficient liquidity",
-                "Be aware of MEV/frontrunning risks"
-            ]
+                "Be aware of MEV/frontrunning risks",
+            ],
         }
-    
+
     def _estimate_total_gas(self, strategy: Dict[str, Any]) -> int:
         """Estimate total gas for strategy execution"""
         # Rough estimates per action type
@@ -306,151 +287,152 @@ class AvocadoIntegration:
             "flash_loan": 150000,
             "swap": 100000,
             "liquidate": 200000,
-            "repay_flash_loan": 50000
+            "repay_flash_loan": 50000,
         }
-        
+
         total_gas = 0
         for step in strategy.get("steps", []):
             action = step.get("action")
             total_gas += gas_estimates.get(action, 100000)
-        
+
         return total_gas
-    
+
     def _check_strategy_risks(self, strategy: Dict[str, Any]) -> List[str]:
         """Check for potential risks in strategy"""
         warnings = []
-        
+
         # Check for high slippage
         slippage = strategy.get("slippage_tolerance", 0)
         if slippage > 1.0:
             warnings.append(f"High slippage tolerance: {slippage}%")
-        
+
         # Check for complex multi-step strategies
         steps = strategy.get("steps", [])
         if len(steps) > 5:
             warnings.append(f"Complex strategy with {len(steps)} steps - higher gas costs")
-        
+
         # Check deadline
         deadline = strategy.get("deadline", 0)
         if deadline < 60:
             warnings.append(f"Short deadline: {deadline} seconds")
-        
+
         return warnings
-    
+
     def _encode_flash_loan_call(self, token: str, amount: str) -> str:
         """
         Encode Aave V3 flash loan call
-        
+
         Args:
             token: Token address to borrow
             amount: Amount to borrow (can be string like "10" or "auto")
-            
+
         Returns:
             Encoded calldata as hex string
         """
         try:
             token = Web3.to_checksum_address(token)
-            
+
             # For "auto" or string amounts, use a placeholder (would be calculated dynamically)
             if amount == "auto" or not amount.isdigit():
-                amount_wei = 10 * (10 ** 18)  # Default 10 ETH equivalent
+                amount_wei = 10 * (10**18)  # Default 10 ETH equivalent
             else:
-                amount_wei = int(float(amount) * (10 ** 18))
-            
+                amount_wei = int(float(amount) * (10**18))
+
             # Get pool address
             pool_address = CONTRACT_ADDRESSES[self.network]["aave_v3_pool"]
-            
+
             # Create contract instance for encoding
             pool = self.web3.eth.contract(address=pool_address, abi=AAVE_V3_POOL_ABI)
-            
+
             # Encode flashLoan function call
-            # flashLoan(receiverAddress, assets[], amounts[], modes[], onBehalfOf, params, referralCode)
+            # flashLoan(receiverAddress, assets[], amounts[], modes[],
+            # onBehalfOf, params, referralCode)
             encoded = pool.functions.flashLoan(
                 self.wallet_address,  # receiver
                 [token],  # assets array
                 [amount_wei],  # amounts array
                 [0],  # modes (0 = no debt, flash loan only)
                 self.wallet_address,  # onBehalfOf
-                b'',  # params (empty bytes)
-                0  # referralCode
+                b"",  # params (empty bytes)
+                0,  # referralCode
             )._encode_transaction_data()
             return encoded
-            
+
         except Exception as e:
             print(f"Error encoding flash loan: {e}")
             return "0x"
-    
+
     def _encode_swap_call(self, dex: str, from_token: str, to_token: str) -> str:
         """
         Encode DEX swap call
-        
+
         Args:
             dex: DEX name (uniswap_v3, sushiswap)
             from_token: Input token address
             to_token: Output token address
-            
+
         Returns:
             Encoded calldata as hex string
         """
         try:
             from_token = Web3.to_checksum_address(from_token)
             to_token = Web3.to_checksum_address(to_token)
-            
+
             if dex == "uniswap_v3":
                 # Get router address
                 router_address = CONTRACT_ADDRESSES[self.network]["uniswap_v3_router"]
-                
+
                 # Encode Uniswap V3 exactInputSingle
                 router = self.web3.eth.contract(address=router_address, abi=UNISWAP_V3_ROUTER_ABI)
-                
+
                 # Placeholder values - would be calculated from actual balances
-                encoded = router.functions.exactInputSingle((
-                    from_token,  # tokenIn
-                    to_token,  # tokenOut
-                    3000,  # fee (0.3%)
-                    self.wallet_address,  # recipient
-                    int(datetime.now().timestamp()) + 300,  # deadline (5 min)
-                    10 ** 18,  # amountIn (placeholder)
-                    0,  # amountOutMinimum (would calculate with slippage)
-                    0  # sqrtPriceLimitX96
-                ))._encode_transaction_data()
+                encoded = router.functions.exactInputSingle(
+                    (
+                        from_token,  # tokenIn
+                        to_token,  # tokenOut
+                        3000,  # fee (0.3%)
+                        self.wallet_address,  # recipient
+                        int(datetime.now().timestamp()) + 300,  # deadline (5 min)
+                        10**18,  # amountIn (placeholder)
+                        0,  # amountOutMinimum (would calculate with slippage)
+                        0,  # sqrtPriceLimitX96
+                    )
+                )._encode_transaction_data()
                 return encoded
-                
+
             elif dex == "sushiswap":
                 # Get router address
                 router_address = CONTRACT_ADDRESSES[self.network]["sushiswap_router"]
-                
+
                 # Encode SushiSwap swapExactTokensForTokens
                 router = self.web3.eth.contract(address=router_address, abi=SUSHISWAP_ROUTER_ABI)
-                
+
                 encoded = router.functions.swapExactTokensForTokens(
-                    10 ** 18,  # amountIn (placeholder)
+                    10**18,  # amountIn (placeholder)
                     0,  # amountOutMin (would calculate with slippage)
                     [from_token, to_token],  # path
                     self.wallet_address,  # to
-                    int(datetime.now().timestamp()) + 300  # deadline
+                    int(datetime.now().timestamp()) + 300,  # deadline
                 )._encode_transaction_data()
                 return encoded
-            
+
             else:
                 print(f"Unknown DEX: {dex}")
                 return "0x"
-                
+
         except Exception as e:
             print(f"Error encoding swap: {e}")
             return "0x"
-    
-    def _encode_liquidation_call(
-        self, collateral_token: str, debt_token: str, user: str
-    ) -> str:
+
+    def _encode_liquidation_call(self, collateral_token: str, debt_token: str, user: str) -> str:
         """
         Encode Aave V3 liquidation call
-        
+
         Args:
             collateral_token: Collateral asset address
             debt_token: Debt asset address
             user: User address to liquidate
-            
+
         Returns:
             Encoded calldata as hex string
         """
@@ -458,24 +440,24 @@ class AvocadoIntegration:
             collateral_token = Web3.to_checksum_address(collateral_token)
             debt_token = Web3.to_checksum_address(debt_token)
             user = Web3.to_checksum_address(user)
-            
+
             # Get pool address
             pool_address = CONTRACT_ADDRESSES[self.network]["aave_v3_pool"]
-            
+
             # Create contract instance for encoding
             pool = self.web3.eth.contract(address=pool_address, abi=AAVE_V3_POOL_ABI)
-            
+
             # Encode liquidationCall
             # liquidationCall(collateralAsset, debtAsset, user, debtToCover, receiveAToken)
             encoded = pool.functions.liquidationCall(
                 collateral_token,  # collateral asset
                 debt_token,  # debt asset
                 user,  # user to liquidate
-                2 ** 256 - 1,  # max uint256 (liquidate as much as possible)
-                False  # receive aToken (False = receive underlying)
+                2**256 - 1,  # max uint256 (liquidate as much as possible)
+                False,  # receive aToken (False = receive underlying)
             )._encode_transaction_data()
             return encoded
-            
+
         except Exception as e:
             print(f"Error encoding liquidation: {e}")
             return "0x"
