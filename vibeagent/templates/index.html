@@ -689,7 +689,7 @@
             connectStatus.textContent = 'Requesting wallet connection...';
             
             if (!window.ethereum) {
-                connectStatus.textContent = 'No browser wallet detected. Please install a wallet (e.g., MetaMask) to connect.';
+                connectStatus.textContent = 'No browser wallet detected. Please install a Reown-compatible wallet to connect.';
                 connectStatus.classList.remove('info');
                 connectStatus.classList.add('error');
                 return;
@@ -792,7 +792,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="metric" style="color:${item.health < healthThresholdWarning ? warningColor : okColor};">HL: ${item.health.toFixed(2)}</div>
+                    <div class="metric" style="color:${item.health < healthThresholdWarning ? warningColor : okColor};">Health: ${item.health.toFixed(2)}</div>
                 </div>
             `).join('');
             
