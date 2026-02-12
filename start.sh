@@ -14,4 +14,3 @@ else
     echo "Starting with Flask development server..."
     python -m vibeagent.web_interface
 fi
-

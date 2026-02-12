@@ -9,6 +9,7 @@ import json
 from datetime import datetime
 from vibeagent.agent import VibeAgent
 from vibeagent.avocado_integration import AvocadoIntegration
+from vibeagent import __version__
 
 app = Flask(__name__)
 CORS(app)
@@ -30,7 +31,7 @@ def health():
     return jsonify({
         'status': 'healthy',
         'service': 'vibeagent',
-        'version': '1.0.0'
+        'version': __version__
     })
 
 
