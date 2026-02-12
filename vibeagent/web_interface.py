@@ -9,6 +9,7 @@ import json
 from datetime import datetime
 from vibeagent.agent import VibeAgent
 from vibeagent.avocado_integration import AvocadoIntegration
+from vibeagent import __version__
 
 app = Flask(__name__)
 CORS(app)
@@ -22,6 +23,16 @@ avocado = None
 def index():
     """Main page"""
     return render_template('index.html')
+
+
+@app.route('/health')
+def health():
+    """Health check endpoint for monitoring"""
+    return jsonify({
+        'status': 'healthy',
+        'service': 'vibeagent',
+        'version': __version__
+    })
 
 
 @app.route('/static/<path:path>')
@@ -226,6 +237,7 @@ def run_server(host='0.0.0.0', port=5000, debug=False):
 
 
 if __name__ == '__main__':
-    port = int(os.getenv('FLASK_PORT', 5000))
+    # Check for PORT environment variable (used by Render, Heroku, etc.)
+    port = int(os.getenv('PORT', os.getenv('FLASK_PORT', 5000)))
     debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
     run_server(port=port, debug=debug)

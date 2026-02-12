@@ -1,0 +1,60 @@
+# Render ignore file - files to exclude from deployment
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Tests
+test_*.py
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation (keep only essential docs)
+docs/USER_GUIDE.md
+docs/INSTALLATION.md
+docs/ANDROID_INSTALL.md
+
+# Examples
+examples/
+
+# Contracts (not needed for web deployment)
+contracts/
+
+# Local config
+.env
+.vibeagent_config.json
+
+# Build scripts
+setup.sh
+setup.bat
+
+# Temporary files
+/tmp/
+*.log

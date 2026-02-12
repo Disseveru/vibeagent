@@ -4,6 +4,8 @@
 
 VibeAgent is an intelligent coding assistant that helps you create and execute sophisticated DeFi strategies including flashloan arbitrage and liquidations - all without writing a single line of code!
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Disseveru/vibeagent)
+
 ## ✨ Features
 
 - 🤖 **AI-Powered Strategy Generation**: Automatically detects and creates optimal DeFi strategies
@@ -74,6 +76,26 @@ Install VibeAgent as a Progressive Web App on your Android device:
 5. Launch it like any native Android app!
 
 See [Android Installation Guide](docs/ANDROID_INSTALL.md) for detailed instructions.
+
+#### 🌐 Cloud Deployment (Deploy to Render)
+
+Want to access VibeAgent from anywhere via web browser?
+
+**Deploy to Render in 5 minutes:**
+1. Fork this repository to your GitHub account
+2. Sign up at [Render.com](https://render.com) (free tier available)
+3. Create a new Web Service and connect your GitHub repo
+4. Render auto-detects configuration from `render.yaml`
+5. Add your RPC URLs as environment variables
+6. Deploy and access from any browser!
+
+**Benefits:**
+- ✅ Access from Google Chrome on any device
+- ✅ No need to keep your computer running
+- ✅ Free tier available (upgrade to $7/month for always-on)
+- ✅ Automatic HTTPS and custom domain support
+
+See [Render Deployment Guide](docs/RENDER_DEPLOYMENT.md) for detailed step-by-step instructions.
 
 #### Option 2: Command Line Interface
 
