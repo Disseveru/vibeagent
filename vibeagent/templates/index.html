@@ -953,10 +953,6 @@
                 showStatus(`Error: ${error.message}`, 'error');
             }
         }
-            }).catch(err => {
-                showStatus('Failed to copy', 'error');
-            });
-        }
         
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
