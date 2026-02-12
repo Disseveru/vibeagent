@@ -447,7 +447,8 @@
                 <label for="walletAddress">Avocado Multi-Sig Wallet Address (Optional):</label>
                 <input type="text" id="walletAddress" placeholder="0x... (or use connected wallet)" />
                 <small style="color: #666; display: block; margin-top: 5px;">
-                    Leave empty to use your connected wallet, or enter an Avocado multi-sig address
+                    If you have connected a wallet above, you can leave this empty to use that address. 
+                    Or enter a different Avocado multi-sig address here.
                 </small>
             </div>
             <button onclick="initializeAgent()">Initialize Agent</button>
@@ -1190,9 +1191,9 @@
         // Update safety settings based on UI inputs
         function updateSafetySettingsFromUI() {
             const settings = {
-                manualApproval: document.getElementById('requireApproval')?.checked || true,
-                minProfitUsd: parseFloat(document.getElementById('minProfit')?.value || 50),
-                maxGasPriceGwei: parseFloat(document.getElementById('maxGas')?.value || 100)
+                manualApproval: document.getElementById('requireApproval')?.checked ?? true,
+                minProfitUsd: parseFloat(document.getElementById('minProfit')?.value ?? 50),
+                maxGasPriceGwei: parseFloat(document.getElementById('maxGas')?.value ?? 100)
             };
             
             updateSafetySettings(settings);

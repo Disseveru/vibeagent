@@ -226,8 +226,12 @@ async function updateBalance() {
             params: [walletState.address, 'latest']
         });
         
-        // Convert from Wei to Ether
-        walletState.balance = parseInt(balance, 16) / 1e18;
+        // Convert from Wei to Ether (using BigInt for precision)
+        const balanceWei = BigInt(balance);
+        const etherDivisor = BigInt(1e18);
+        const etherBalance = Number(balanceWei) / Number(etherDivisor);
+        
+        walletState.balance = etherBalance;
         updateWalletUI();
         
     } catch (error) {

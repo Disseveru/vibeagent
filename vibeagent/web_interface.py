@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, jsonify, send_file, send_from
 from flask_cors import CORS
 import os
 import json
+import threading
 from datetime import datetime
 from vibeagent.agent import VibeAgent
 from vibeagent.avocado_integration import AvocadoIntegration
@@ -27,8 +28,9 @@ config = AgentConfig()
 logger = VibeLogger(log_file=config.log_file, log_level=config.log_level)
 autonomous_scanner = None
 
-# Wallet connection state
+# Wallet connection state (thread-safe)
 wallet_connections = {}
+wallet_connections_lock = threading.Lock()
 
 
 @app.route("/")
@@ -223,12 +225,13 @@ def wallet_connect():
         return jsonify({"success": False, "error": "No address provided"}), 400
 
     try:
-        # Store wallet connection state
-        wallet_connections[address] = {
-            "address": address,
-            "chainId": chain_id,
-            "connected_at": datetime.now().isoformat(),
-        }
+        # Store wallet connection state (thread-safe)
+        with wallet_connections_lock:
+            wallet_connections[address] = {
+                "address": address,
+                "chainId": chain_id,
+                "connected_at": datetime.now().isoformat(),
+            }
 
         logger.info(f"Wallet connected: {address} on chain {chain_id}")
 
@@ -250,9 +253,10 @@ def wallet_disconnect():
     data = request.json
     address = data.get("address")
 
-    if address and address in wallet_connections:
-        del wallet_connections[address]
-        logger.info(f"Wallet disconnected: {address}")
+    with wallet_connections_lock:
+        if address and address in wallet_connections:
+            del wallet_connections[address]
+            logger.info(f"Wallet disconnected: {address}")
 
     return jsonify({"success": True, "message": "Wallet disconnected"})
 
@@ -312,7 +316,9 @@ def get_transaction(tx_hash):
 @app.route("/api/wallet/state", methods=["GET"])
 def get_wallet_state():
     """Get current wallet connection state"""
-    return jsonify({"success": True, "connections": list(wallet_connections.values())})
+    with wallet_connections_lock:
+        connections = list(wallet_connections.values())
+    return jsonify({"success": True, "connections": connections})
 
 
 # Autonomous Scanner Endpoints
