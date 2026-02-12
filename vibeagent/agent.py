@@ -13,6 +13,7 @@ from .contract_abis import (
     ERC20_ABI, UNISWAP_V3_QUOTER_ABI, UNISWAP_V3_ROUTER_ABI,
     SUSHISWAP_ROUTER_ABI, AAVE_V3_POOL_ABI, CONTRACT_ADDRESSES
 )
+from .mev_bot import MEVBot
 
 load_dotenv()
 
@@ -37,6 +38,7 @@ class VibeAgent:
         self.openai_client = self._initialize_openai()
         self.strategies = []
         self._token_cache = {}  # Cache for token decimals and symbols
+        self.mev_bot = MEVBot(self.web3, network)  # Initialize MEV bot
         
     def _initialize_web3(self, network: str) -> Web3:
         """Initialize Web3 connection based on network"""
@@ -579,3 +581,72 @@ class VibeAgent:
         except Exception as e:
             print(f"OpenAI API error: {e}")
             return "Using template strategy (API call failed)"
+    
+    def analyze_mev_opportunity(
+        self,
+        token_pair: tuple,
+        dexes: List[str],
+        min_profit_usd: float = 50.0
+    ) -> Dict[str, Any]:
+        """
+        Analyze MEV opportunities for a given token pair
+        
+        Args:
+            token_pair: Tuple of (token_a, token_b) addresses
+            dexes: List of DEX names to check
+            min_profit_usd: Minimum profit threshold in USD
+            
+        Returns:
+            Dictionary containing MEV opportunity analysis
+        """
+        print(f"Analyzing MEV opportunities for {token_pair[0][:8]}.../{token_pair[1][:8]}...")
+        
+        # Use MEV bot to detect opportunities
+        opportunities = self.mev_bot.detect_mev_opportunities(
+            token_pair=token_pair,
+            dexes=dexes,
+            min_profit_usd=min_profit_usd
+        )
+        
+        # If opportunities found, enhance with price data
+        if opportunities:
+            for opp in opportunities:
+                # Get current arbitrage data
+                arb_opp = self.analyze_arbitrage_opportunity(token_pair, dexes)
+                opp["estimated_profit_usd"] = arb_opp.get("estimated_profit_usd", 0)
+                opp["prices"] = arb_opp.get("prices", {})
+                opp["buy_dex"] = arb_opp.get("buy_dex")
+                opp["sell_dex"] = arb_opp.get("sell_dex")
+                
+                # Add MEV protection analysis
+                opp["mev_protection"] = self.mev_bot.get_protection_strategy(
+                    opp, protection_level="standard"
+                )
+        
+        return opportunities[0] if opportunities else {}
+    
+    def get_mev_protection_for_strategy(
+        self,
+        strategy: Dict[str, Any],
+        protection_level: str = "standard"
+    ) -> Dict[str, Any]:
+        """
+        Get MEV protection recommendations for a strategy
+        
+        Args:
+            strategy: Strategy dictionary to protect
+            protection_level: Protection level (minimal, standard, maximum)
+            
+        Returns:
+            MEV protection strategy
+        """
+        return self.mev_bot.get_protection_strategy(strategy, protection_level)
+    
+    def get_mev_education(self) -> Dict[str, Any]:
+        """
+        Get educational content about MEV
+        
+        Returns:
+            Educational content for users
+        """
+        return self.mev_bot.get_mev_educational_content()

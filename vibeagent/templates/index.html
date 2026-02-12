@@ -296,6 +296,7 @@
         <div class="tabs">
             <button class="tab active" onclick="switchTab('arbitrage')">Arbitrage</button>
             <button class="tab" onclick="switchTab('liquidation')">Liquidation</button>
+            <button class="tab" onclick="switchTab('mev')">MEV Protection</button>
         </div>
         
         <!-- Arbitrage Tab -->
@@ -336,6 +337,75 @@
                 </div>
                 <button onclick="scanLiquidation()">Scan for Liquidations</button>
                 <div id="liquidationResult" class="result-box hidden"></div>
+            </div>
+        </div>
+        
+        <!-- MEV Protection Tab -->
+        <div id="mev-tab" class="tab-content">
+            <div class="section">
+                <h2>🛡️ MEV Protection & Analysis</h2>
+                <p style="color: #666; margin-bottom: 15px;">
+                    <strong>MEV (Maximal Extractable Value)</strong> refers to profit that can be extracted by reordering, 
+                    inserting, or censoring transactions. Learn about MEV risks and protect your transactions.
+                </p>
+                
+                <!-- MEV Opportunity Scanner -->
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: #667eea; margin-bottom: 10px;">🔍 Scan for MEV Opportunities</h3>
+                    <div class="form-group">
+                        <label for="mevTokenA">Token A Address:</label>
+                        <input type="text" id="mevTokenA" placeholder="0x..." />
+                    </div>
+                    <div class="form-group">
+                        <label for="mevTokenB">Token B Address:</label>
+                        <input type="text" id="mevTokenB" placeholder="0x..." />
+                    </div>
+                    <div class="form-group">
+                        <label for="mevDexes">DEXes to Check (comma-separated):</label>
+                        <input type="text" id="mevDexes" value="uniswap_v3,sushiswap" />
+                    </div>
+                    <div class="form-group">
+                        <label for="minProfit">Minimum Profit (USD):</label>
+                        <input type="number" id="minProfit" value="50" min="0" step="10" />
+                    </div>
+                    <button onclick="scanMEVOpportunities()">Scan MEV Opportunities</button>
+                    <div id="mevScanResult" class="result-box hidden"></div>
+                </div>
+                
+                <!-- MEV Risk Analyzer -->
+                <div style="margin-bottom: 30px; padding: 15px; background: #fff3cd; border-radius: 8px;">
+                    <h3 style="color: #856404; margin-bottom: 10px;">⚠️ Analyze MEV Risk</h3>
+                    <p style="color: #856404; margin-bottom: 10px; font-size: 14px;">
+                        Analyze an existing strategy for MEV risks including front-running and sandwich attacks.
+                    </p>
+                    <button class="btn-warning" onclick="analyzeMEVRisk()">Analyze Current Strategy</button>
+                    <div id="mevAnalysisResult" class="result-box hidden"></div>
+                </div>
+                
+                <!-- MEV Protection Strategies -->
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: #667eea; margin-bottom: 10px;">🔒 Get Protection Strategies</h3>
+                    <div class="form-group">
+                        <label for="protectionLevel">Protection Level:</label>
+                        <select id="protectionLevel">
+                            <option value="minimal">Minimal (Basic protection)</option>
+                            <option value="standard" selected>Standard (Recommended)</option>
+                            <option value="maximum">Maximum (High security)</option>
+                        </select>
+                    </div>
+                    <button class="btn-secondary" onclick="getMEVProtection()">Get Protection Strategy</button>
+                    <div id="mevProtectionResult" class="result-box hidden"></div>
+                </div>
+                
+                <!-- MEV Education -->
+                <div style="padding: 15px; background: #d1ecf1; border-radius: 8px;">
+                    <h3 style="color: #0c5460; margin-bottom: 10px;">📚 Learn About MEV</h3>
+                    <p style="color: #0c5460; margin-bottom: 10px; font-size: 14px;">
+                        New to MEV? Click below to learn about different MEV attack types and how to protect yourself.
+                    </p>
+                    <button class="btn-secondary" onclick="showMEVEducation()">Show MEV Education</button>
+                    <div id="mevEducationResult" class="result-box hidden"></div>
+                </div>
             </div>
         </div>
         
@@ -598,6 +668,291 @@
             
             navigator.clipboard.writeText(text).then(() => {
                 showStatus('Copied to clipboard!', 'success');
+            }).catch(err => {
+                showStatus('Failed to copy', 'error');
+            });
+        }
+        
+        // MEV Functions
+        async function scanMEVOpportunities() {
+            const tokenA = document.getElementById('mevTokenA').value;
+            const tokenB = document.getElementById('mevTokenB').value;
+            const dexes = document.getElementById('mevDexes').value.split(',').map(d => d.trim());
+            const minProfit = parseFloat(document.getElementById('minProfit').value) || 50;
+            
+            if (!tokenA || !tokenB) {
+                showStatus('Please enter both token addresses', 'error');
+                return;
+            }
+            
+            showStatus('Scanning for MEV opportunities...', 'info');
+            
+            try {
+                const response = await fetch('/api/scan/mev', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        token_a: tokenA, 
+                        token_b: tokenB, 
+                        dexes: dexes,
+                        min_profit_usd: minProfit
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.opportunity) {
+                    currentStrategy = data.opportunity;
+                    const opp = data.opportunity;
+                    const resultDiv = document.getElementById('mevScanResult');
+                    
+                    // Format risk level with color
+                    const riskColor = opp.risk_level === 'high' ? '#dc3545' : 
+                                    opp.risk_level === 'medium' ? '#ffc107' : '#28a745';
+                    
+                    resultDiv.innerHTML = `
+                        <h3>MEV Opportunity Detected!</h3>
+                        <div style="margin: 15px 0;">
+                            <p><strong>Type:</strong> ${opp.type}</p>
+                            <p><strong>Risk Level:</strong> <span style="color: ${riskColor}; font-weight: bold;">${opp.risk_level.toUpperCase()}</span></p>
+                            <p><strong>Estimated Profit:</strong> $${opp.estimated_profit_usd?.toFixed(2) || '0.00'}</p>
+                            ${opp.buy_dex ? `<p><strong>Buy on:</strong> ${opp.buy_dex}</p>` : ''}
+                            ${opp.sell_dex ? `<p><strong>Sell on:</strong> ${opp.sell_dex}</p>` : ''}
+                        </div>
+                        ${opp.mev_protection?.warnings ? 
+                            '<div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0;">' +
+                            '<strong>⚠️ Warnings:</strong><ul>' +
+                            opp.mev_protection.warnings.map(w => '<li>' + w + '</li>').join('') +
+                            '</ul></div>' : ''
+                        }
+                        <details style="margin-top: 15px;">
+                            <summary style="cursor: pointer; color: #667eea; font-weight: bold;">View Full Details</summary>
+                            <pre style="margin-top: 10px;">${JSON.stringify(opp, null, 2)}</pre>
+                        </details>
+                    `;
+                    resultDiv.classList.remove('hidden');
+                    showStatus('MEV opportunity analyzed!', 'success');
+                } else {
+                    showStatus(data.error || 'No MEV opportunities found', 'info');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function analyzeMEVRisk() {
+            if (!currentStrategy) {
+                showStatus('Please scan for an opportunity first', 'error');
+                return;
+            }
+            
+            showStatus('Analyzing MEV risks...', 'info');
+            
+            try {
+                const response = await fetch('/api/mev/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ strategy: currentStrategy })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultDiv = document.getElementById('mevAnalysisResult');
+                    const frontrun = data.frontrunning;
+                    const sandwich = data.sandwich;
+                    
+                    // Determine overall risk color
+                    const overallRisk = data.overall_risk;
+                    const riskColor = overallRisk >= 0.6 ? '#dc3545' : 
+                                    overallRisk >= 0.3 ? '#ffc107' : '#28a745';
+                    
+                    resultDiv.innerHTML = `
+                        <h3>MEV Risk Analysis</h3>
+                        <div style="margin: 15px 0;">
+                            <p><strong>Overall MEV Risk Score:</strong> 
+                                <span style="color: ${riskColor}; font-weight: bold; font-size: 1.2em;">
+                                    ${(overallRisk * 100).toFixed(1)}%
+                                </span>
+                            </p>
+                        </div>
+                        
+                        <div style="background: #f8d7da; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h4 style="color: #721c24; margin-bottom: 10px;">🎯 Front-Running Risk</h4>
+                            <p><strong>Risk Level:</strong> <span style="color: ${riskColor};">${frontrun.risk_level.toUpperCase()}</span></p>
+                            <p><strong>Risk Score:</strong> ${(frontrun.frontrunning_risk * 100).toFixed(1)}%</p>
+                            <p><strong>Profit at Risk:</strong> $${frontrun.estimated_profit_at_risk?.toFixed(2) || '0.00'}</p>
+                            <div style="margin-top: 10px;">
+                                <strong>Recommendations:</strong>
+                                <ul>${frontrun.recommendations.map(r => '<li>' + r + '</li>').join('')}</ul>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h4 style="color: #856404; margin-bottom: 10px;">🥪 Sandwich Attack Risk</h4>
+                            <p><strong>Risk Level:</strong> <span style="color: ${riskColor};">${sandwich.risk_level.toUpperCase()}</span></p>
+                            <p><strong>Risk Score:</strong> ${(sandwich.sandwich_risk_score * 100).toFixed(1)}%</p>
+                            <p><strong>Swap Count:</strong> ${sandwich.swap_count}</p>
+                            <p><strong>Current Slippage:</strong> ${sandwich.slippage_tolerance}%</p>
+                            <div style="margin-top: 10px;">
+                                <strong>Recommendations:</strong>
+                                <ul>${sandwich.recommendations.map(r => '<li>' + r + '</li>').join('')}</ul>
+                            </div>
+                        </div>
+                        
+                        <details style="margin-top: 15px;">
+                            <summary style="cursor: pointer; color: #667eea; font-weight: bold;">View Full Analysis</summary>
+                            <pre style="margin-top: 10px;">${JSON.stringify(data, null, 2)}</pre>
+                        </details>
+                    `;
+                    resultDiv.classList.remove('hidden');
+                    showStatus('MEV risk analysis completed!', 'success');
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function getMEVProtection() {
+            if (!currentStrategy) {
+                showStatus('Please scan for an opportunity first', 'error');
+                return;
+            }
+            
+            const protectionLevel = document.getElementById('protectionLevel').value;
+            showStatus('Generating MEV protection strategy...', 'info');
+            
+            try {
+                const response = await fetch('/api/mev/protection', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        strategy: currentStrategy,
+                        protection_level: protectionLevel
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const protection = data.protection;
+                    const resultDiv = document.getElementById('mevProtectionResult');
+                    
+                    resultDiv.innerHTML = `
+                        <h3>🛡️ MEV Protection Strategy</h3>
+                        <div style="margin: 15px 0;">
+                            <p><strong>Protection Level:</strong> ${protection.protection_level.toUpperCase()}</p>
+                            <p><strong>Overall MEV Risk:</strong> ${(protection.overall_mev_risk * 100).toFixed(1)}%</p>
+                            <p><strong>Estimated Protection Cost:</strong> $${protection.estimated_protection_cost_usd.toFixed(2)}</p>
+                        </div>
+                        
+                        <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h4 style="color: #155724; margin-bottom: 10px;">Protection Mechanisms</h4>
+                            ${protection.mechanisms.map(m => `
+                                <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 5px;">
+                                    <p style="margin: 0;"><strong>${m.mechanism}:</strong> ${m.description}</p>
+                                    <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">
+                                        Recommended: ${m.recommended_value} (Priority: ${m.priority})
+                                    </p>
+                                    ${m.note ? '<p style="margin: 5px 0 0 0; color: #856404; font-size: 0.9em;">⚠️ ' + m.note + '</p>' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        ${protection.warnings.length > 0 ? 
+                            '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0;">' +
+                            '<h4 style="color: #856404; margin-bottom: 10px;">⚠️ Important Warnings</h4>' +
+                            '<ul>' + protection.warnings.map(w => '<li>' + w + '</li>').join('') + '</ul>' +
+                            '</div>' : ''
+                        }
+                        
+                        <details style="margin-top: 15px;">
+                            <summary style="cursor: pointer; color: #667eea; font-weight: bold;">View Full Protection Strategy</summary>
+                            <pre style="margin-top: 10px;">${JSON.stringify(protection, null, 2)}</pre>
+                        </details>
+                    `;
+                    resultDiv.classList.remove('hidden');
+                    showStatus('Protection strategy generated!', 'success');
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function showMEVEducation() {
+            showStatus('Loading MEV education...', 'info');
+            
+            try {
+                const response = await fetch('/api/mev/education', {
+                    method: 'GET',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const edu = data.education;
+                    const resultDiv = document.getElementById('mevEducationResult');
+                    
+                    resultDiv.innerHTML = `
+                        <h3>${edu.title}</h3>
+                        <p style="margin: 15px 0; line-height: 1.6;">${edu.summary}</p>
+                        
+                        <div style="margin: 20px 0;">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">🎭 MEV Attack Types</h4>
+                            ${edu.attack_types.map(attack => `
+                                <div style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-left: 4px solid #667eea; border-radius: 5px;">
+                                    <h5 style="color: #333; margin: 0 0 10px 0;">${attack.name}</h5>
+                                    <p style="margin: 5px 0;"><strong>Description:</strong> ${attack.description}</p>
+                                    <p style="margin: 5px 0; color: #666;"><strong>Example:</strong> ${attack.example}</p>
+                                    <p style="margin: 5px 0; color: #28a745;"><strong>Protection:</strong> ${attack.protection}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div style="margin: 20px 0;">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">🛠️ Protection Tools</h4>
+                            ${edu.protection_tools.map(tool => `
+                                <div style="margin-bottom: 10px; padding: 10px; background: #e7f3ff; border-radius: 5px;">
+                                    <p style="margin: 0;"><strong>${tool.tool}:</strong> ${tool.description}</p>
+                                    ${tool.url ? '<p style="margin: 5px 0 0 0;"><a href="' + tool.url + '" target="_blank" style="color: #667eea;">Learn More →</a></p>' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div style="margin: 20px 0; padding: 15px; background: #d1ecf1; border-radius: 8px;">
+                            <h4 style="color: #0c5460; margin-bottom: 10px;">✅ Best Practices</h4>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                ${edu.best_practices.map(practice => '<li style="margin: 5px 0;">' + practice + '</li>').join('')}
+                            </ul>
+                        </div>
+                        
+                        <div style="margin: 20px 0;">
+                            <h4 style="color: #667eea; margin-bottom: 10px;">📊 Risk Levels Explained</h4>
+                            <div style="padding: 10px; background: #d4edda; border-radius: 5px; margin-bottom: 5px;">
+                                <strong style="color: #28a745;">LOW:</strong> ${edu.risk_levels.low}
+                            </div>
+                            <div style="padding: 10px; background: #fff3cd; border-radius: 5px; margin-bottom: 5px;">
+                                <strong style="color: #856404;">MEDIUM:</strong> ${edu.risk_levels.medium}
+                            </div>
+                            <div style="padding: 10px; background: #f8d7da; border-radius: 5px;">
+                                <strong style="color: #721c24;">HIGH:</strong> ${edu.risk_levels.high}
+                            </div>
+                        </div>
+                    `;
+                    resultDiv.classList.remove('hidden');
+                    showStatus('MEV education loaded!', 'success');
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
             }).catch(err => {
                 showStatus('Failed to copy', 'error');
             });
