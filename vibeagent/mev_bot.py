@@ -216,6 +216,25 @@ class MEVBot:
         frontrun_analysis = self.analyze_frontrunning_risk(opportunity)
         sandwich_analysis = self.analyze_sandwich_risk(opportunity)
         
+        # Minimal protections (always include basic protection)
+        if protection_level == "minimal":
+            protection_mechanisms.extend([
+                {
+                    "mechanism": "basic_slippage_protection",
+                    "description": "Set reasonable slippage tolerance",
+                    "parameter": "max_slippage",
+                    "recommended_value": "0.5%",
+                    "priority": "medium"
+                },
+                {
+                    "mechanism": "basic_deadline",
+                    "description": "Set standard transaction deadline",
+                    "parameter": "deadline",
+                    "recommended_value": "300 seconds",
+                    "priority": "low"
+                }
+            ])
+        
         # Standard protections
         if protection_level in ["standard", "maximum"]:
             protection_mechanisms.extend([

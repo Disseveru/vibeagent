@@ -11,6 +11,7 @@ VibeAgent is an intelligent coding assistant that helps you create and execute s
 - 🤖 **AI-Powered Strategy Generation**: Automatically detects and creates optimal DeFi strategies
 - 💎 **Flashloan Arbitrage**: Find price differences across DEXes and profit with zero capital
 - 🎯 **Smart Liquidations**: Identify and execute profitable liquidations on lending protocols
+- 🛡️ **MEV Protection**: Built-in MEV (Maximal Extractable Value) detection and protection mechanisms
 - 🔐 **Avocado Multi-Sig Integration**: Seamlessly integrates with Instadapp's Avocado wallet transaction builder
 - 🌐 **No-Code Web Interface**: Beautiful, intuitive UI for non-technical users
 - ⚡ **CLI Support**: Command-line interface for quick operations
@@ -59,11 +60,12 @@ Then open your browser at `http://localhost:5000`
 **Steps:**
 1. Enter your Avocado wallet address and select network
 2. Click "Initialize Agent"
-3. Choose Arbitrage or Liquidation tab
+3. Choose Arbitrage, Liquidation, or MEV Protection tab
 4. Enter token addresses or protocol details
 5. Click "Scan" to find opportunities
-6. Click "Export for Avocado Transaction Builder"
-7. Copy the JSON and import it into [avocado.instadapp.io](https://avocado.instadapp.io)
+6. Review MEV risks and protection recommendations (MEV tab)
+7. Click "Export for Avocado Transaction Builder"
+8. Copy the JSON and import it into [avocado.instadapp.io](https://avocado.instadapp.io)
 
 #### 📱 Android Installation (PWA)
 
@@ -198,11 +200,67 @@ Profit from undercollateralized positions in lending protocols:
 6. Keep the profit
 ```
 
+## 🛡️ MEV Protection
+
+VibeAgent includes built-in MEV (Maximal Extractable Value) protection to safeguard your transactions from front-running and sandwich attacks.
+
+### What is MEV?
+
+MEV refers to profit that can be extracted by reordering, inserting, or censoring transactions within blocks. MEV bots monitor the public mempool and can exploit opportunities at your expense through:
+
+- **Front-running**: Bots copy your profitable transaction and execute it first with higher gas
+- **Sandwich Attacks**: Bots place transactions before and after yours to manipulate prices
+- **Back-running**: Bots execute transactions immediately after yours to capture profit
+
+### MEV Protection Features
+
+- 🔍 **MEV Detection**: Automatically scan for MEV opportunities with risk analysis
+- ⚠️ **Risk Assessment**: Real-time analysis of front-running and sandwich attack risks
+- 🛡️ **Protection Strategies**: Get specific recommendations based on risk level
+- 📚 **Educational Content**: Learn about MEV attacks and how to protect yourself
+- 🎯 **Risk Scoring**: Each strategy gets a risk score (low/medium/high)
+
+### How to Use MEV Protection
+
+1. Navigate to the **MEV Protection** tab in the web interface
+2. **Scan for MEV opportunities** or **analyze existing strategies**
+3. Review the risk analysis (front-running and sandwich attack scores)
+4. Get protection recommendations based on risk level
+5. Apply recommended protections before executing transactions
+
+### Protection Levels
+
+- **Minimal**: Basic slippage and deadline protection (for low-risk transactions)
+- **Standard** (Recommended): Slippage protection + tight deadlines + higher gas prices
+- **Maximum**: All protections + private mempool (Flashbots) + transaction bundling
+
+### Best Practices
+
+- ✅ Always check MEV risk before executing strategies
+- ✅ Use private mempools (Flashbots) for high-value transactions
+- ✅ Set minimal slippage tolerance (0.1-0.5%)
+- ✅ Use tight transaction deadlines (1-3 minutes)
+- ✅ Split large transactions into smaller parts
+- ✅ Monitor gas prices and use competitive rates
+- ⚠️ Test with small amounts first
+- ⚠️ Understand that MEV protection cannot eliminate all risks
+
+### Beginner-Friendly Notice
+
+🚨 **Important for Beginners**: MEV can significantly impact your profits. Our MEV Protection tab provides:
+- Easy-to-understand risk scores
+- Clear explanations of different attack types
+- Step-by-step protection recommendations
+- Educational resources to learn more
+
+We recommend starting with the "Learn About MEV" section before executing any strategies.
+
 ## 🎨 Web Interface Preview
 
 The web interface provides:
 - 🎯 Simple configuration with network selection
 - 🔍 Opportunity scanner with real-time analysis
+- 🛡️ MEV Protection tab with risk analysis and education
 - 📊 Strategy visualization
 - ⚡ One-click export to Avocado
 - ⚠️ Risk warnings and gas estimates
@@ -213,11 +271,13 @@ The web interface provides:
 
 - ✅ Strategies are simulated before execution
 - ✅ Gas estimates provided upfront
+- ✅ **MEV protection with risk analysis and recommendations**
 - ✅ Risk warnings for high slippage or complexity
 - ✅ Works with multi-sig wallets for added security
 - ✅ No private keys stored - integrates with your existing wallet
 - ⚠️ Always review transactions before signing
 - ⚠️ Test with small amounts first
+- ⚠️ **Check MEV risks before executing any strategy**
 
 ## 🔗 Supported Protocols
 
