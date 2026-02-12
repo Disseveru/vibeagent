@@ -199,7 +199,8 @@ class ExecutionEngine:
             # 4. Handle success/failure
             
             # For now, we'll simulate success and log the transaction
-            tx_hash = f"0x{int(time.time()):x}"  # Simulated tx hash
+            import uuid
+            tx_hash = f"0x{uuid.uuid4().hex}"  # Generate unique tx hash
             
             self.logger.log_transaction_submitted(tx_hash, opportunity)
             

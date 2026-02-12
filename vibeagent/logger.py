@@ -116,10 +116,10 @@ class VibeLogger:
             return []
         
         try:
+            from collections import deque
             with open(self.transaction_log_file, "r") as f:
-                lines = f.readlines()
-                # Get last N lines
-                recent_lines = lines[-limit:] if len(lines) > limit else lines
+                # Use deque to efficiently get last N lines
+                recent_lines = deque(f, maxlen=limit)
                 return [json.loads(line) for line in recent_lines]
         except Exception as e:
             self.error(f"Failed to read transaction history: {e}")

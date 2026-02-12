@@ -909,7 +909,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${opportunities.reverse().map(opp => `
+                            ${[...opportunities].reverse().map(opp => `
                                 <tr style="border-bottom: 1px solid #eee;">
                                     <td style="padding: 8px;">${new Date(opp.discovered_at).toLocaleTimeString()}</td>
                                     <td style="padding: 8px;">${opp.network}</td>
