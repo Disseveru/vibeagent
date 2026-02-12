@@ -24,6 +24,16 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/health')
+def health():
+    """Health check endpoint for monitoring"""
+    return jsonify({
+        'status': 'healthy',
+        'service': 'vibeagent',
+        'version': '1.0.0'
+    })
+
+
 @app.route('/static/<path:path>')
 def send_static(path):
     """Serve static files (manifest, service worker, icons)"""
