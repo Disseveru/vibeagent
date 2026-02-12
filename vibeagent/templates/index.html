@@ -894,7 +894,10 @@
                 if (data.success) {
                     currentStrategy = data.opportunity;
                     const resultDiv = document.getElementById('arbitrageResult');
-                    resultDiv.innerHTML = `<h3>Opportunity Found!</h3><pre>${JSON.stringify(data.opportunity, null, 2)}</pre>`;
+                    const preElement = document.createElement('pre');
+                    preElement.textContent = JSON.stringify(data.opportunity, null, 2);
+                    resultDiv.innerHTML = '<h3>Opportunity Found!</h3>';
+                    resultDiv.appendChild(preElement);
                     resultDiv.classList.remove('hidden');
                     showStatus('Arbitrage opportunity analyzed!', 'success');
                 } else {
@@ -924,7 +927,10 @@
                     if (data.opportunities.length > 0) {
                         currentStrategy = data.opportunities[0];
                         const resultDiv = document.getElementById('liquidationResult');
-                        resultDiv.innerHTML = `<h3>Opportunities Found!</h3><pre>${JSON.stringify(data.opportunities, null, 2)}</pre>`;
+                        const preElement = document.createElement('pre');
+                        preElement.textContent = JSON.stringify(data.opportunities, null, 2);
+                        resultDiv.innerHTML = '<h3>Opportunities Found!</h3>';
+                        resultDiv.appendChild(preElement);
                         resultDiv.classList.remove('hidden');
                         showStatus(`Found ${data.opportunities.length} liquidation opportunities!`, 'success');
                     } else {
@@ -1248,15 +1254,15 @@
                     const opp = approval.opportunity;
                     return `
                         <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0;">
-                            <p><strong>Type:</strong> ${opp.type}</p>
-                            <p><strong>Network:</strong> ${approval.network}</p>
+                            <p><strong>Type:</strong> ${escapeHtml(opp.type)}</p>
+                            <p><strong>Network:</strong> ${escapeHtml(approval.network)}</p>
                             <p><strong>Estimated Profit:</strong> $${opp.estimated_profit_usd.toFixed(2)}</p>
-                            <p><strong>Submitted:</strong> ${approval.submitted_at}</p>
-                            <button onclick="approveTransaction('${approval.network}', '${approval.approval_id}')" 
+                            <p><strong>Submitted:</strong> ${escapeHtml(approval.submitted_at)}</p>
+                            <button onclick="approveTransaction('${escapeHtml(approval.network)}', '${escapeHtml(approval.approval_id)}')" 
                                     class="btn-secondary" style="margin-right: 10px;">
                                 ✓ Approve
                             </button>
-                            <button onclick="rejectTransaction('${approval.network}', '${approval.approval_id}')" 
+                            <button onclick="rejectTransaction('${escapeHtml(approval.network)}', '${escapeHtml(approval.approval_id)}')" 
                                     style="background: #f14668;">
                                 ✗ Reject
                             </button>
@@ -1351,10 +1357,10 @@
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/static/service-worker.js')
                     .then(function(registration) {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        // ServiceWorker registered successfully
                     })
                     .catch(function(err) {
-                        console.log('ServiceWorker registration failed: ', err);
+                        // ServiceWorker registration failed
                     });
             });
         }
@@ -1373,7 +1379,6 @@
         function showInstallPromotion() {
             // Check if already installed
             if (window.matchMedia('(display-mode: standalone)').matches) {
-                console.log('App is already installed');
                 return;
             }
             
@@ -1400,11 +1405,6 @@
                 deferredPrompt.prompt();
                 // Wait for the user to respond to the prompt
                 deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
-                    } else {
-                        console.log('User dismissed the install prompt');
-                    }
                     deferredPrompt = null;
                 });
             }
