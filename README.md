@@ -10,6 +10,7 @@ VibeAgent is an intelligent coding assistant that helps you create and execute s
 
 - 🤖 **AI-Powered Strategy Generation**: Automatically detects and creates optimal DeFi strategies
 - 🔄 **Autonomous Arbitrage Agent**: Continuously scans and executes profitable opportunities automatically
+- 🔗 **Wallet Connect**: Connect your MetaMask or browser wallet directly to auto-fill your Avocado address
 - 💎 **Flashloan Arbitrage**: Find price differences across DEXes and profit with zero capital
 - 🎯 **Smart Liquidations**: Identify and execute profitable liquidations on lending protocols
 - 🔐 **Avocado Multi-Sig Integration**: Seamlessly integrates with Instadapp's Avocado wallet transaction builder
@@ -74,13 +75,14 @@ python -m vibeagent.cli web
 Then open your browser at `http://localhost:5000`
 
 **Steps:**
-1. Enter your Avocado wallet address and select network
-2. Click "Initialize Agent"
-3. Choose Arbitrage or Liquidation tab
-4. Enter token addresses or protocol details
-5. Click "Scan" to find opportunities
-6. Click "Export for Avocado Transaction Builder"
-7. Copy the JSON and import it into [avocado.instadapp.io](https://avocado.instadapp.io)
+1. Click "Connect Wallet" to connect your MetaMask/browser wallet, or manually enter your Avocado wallet address
+2. Select the network (Ethereum, Polygon, or Arbitrum)
+3. Click "Initialize Agent"
+4. Choose Arbitrage or Liquidation tab
+5. Enter token addresses or protocol details
+6. Click "Scan" to find opportunities
+7. Click "Export for Avocado Transaction Builder"
+8. Copy the JSON and import it into [avocado.instadapp.io](https://avocado.instadapp.io)
 
 #### 📱 Android Installation (PWA)
 

@@ -40,6 +40,16 @@ Open your browser and go to: `http://localhost:5000`
 
 #### Step 4: Find Opportunities
 
+**Connecting Your Wallet:**
+1. Click the "🔗 Connect Wallet" button in the Configuration section
+2. Choose "MetaMask / Browser Wallet" if you have MetaMask installed
+3. Approve the connection in your wallet
+4. Your wallet address will be auto-filled and the network will be synced
+
+**Alternatively, Manual Entry:**
+1. Enter your Avocado wallet address manually in the text field
+2. Select your network from the dropdown
+
 **For Arbitrage:**
 1. Click the "Arbitrage" tab
 2. Enter two token addresses (e.g., WETH and USDC)
