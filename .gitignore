@@ -46,6 +46,7 @@ private_keys.txt
 # Generated files
 generated_strategies/
 *.log
+*.jsonl
 
 # Node modules
 node_modules/

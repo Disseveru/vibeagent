@@ -1,6 +1,0 @@
-{"timestamp": "2026-02-12T02:36:48.420242", "status": "submitted", "tx_hash": "0x123", "data": {"type": "arbitrage", "estimated_profit_usd": 100}}
-{"timestamp": "2026-02-12T02:36:48.420360", "status": "success", "tx_hash": "0x123", "data": {"profit": 100}}
-{"timestamp": "2026-02-12T02:36:48.420428", "status": "failed", "tx_hash": "0x123", "data": {"error": "Test error"}}
-{"timestamp": "2026-02-12T02:37:01.254648", "status": "submitted", "tx_hash": "0x123", "data": {"type": "arbitrage", "estimated_profit_usd": 100}}
-{"timestamp": "2026-02-12T02:37:01.254752", "status": "success", "tx_hash": "0x123", "data": {"profit": 100}}
-{"timestamp": "2026-02-12T02:37:01.254825", "status": "failed", "tx_hash": "0x123", "data": {"error": "Test error"}}
