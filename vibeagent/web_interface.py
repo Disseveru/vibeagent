@@ -9,6 +9,9 @@ import json
 from datetime import datetime
 from vibeagent.agent import VibeAgent
 from vibeagent.avocado_integration import AvocadoIntegration
+from vibeagent.config import AgentConfig
+from vibeagent.logger import VibeLogger
+from vibeagent.autonomous_scanner import AutonomousScanner
 from vibeagent import __version__
 
 app = Flask(__name__)
@@ -17,6 +20,11 @@ CORS(app)
 # Global agent instance
 agent = None
 avocado = None
+
+# Global autonomous scanner
+config = AgentConfig()
+logger = VibeLogger(log_file=config.log_file, log_level=config.log_level)
+autonomous_scanner = None
 
 
 @app.route('/')
@@ -229,6 +237,233 @@ def download_file(filename):
     if os.path.exists(filepath):
         return send_file(filepath, as_attachment=True)
     return jsonify({'error': 'File not found'}), 404
+
+
+# Autonomous Scanner Endpoints
+
+@app.route('/api/autonomous/start', methods=['POST'])
+def start_autonomous_scanner():
+    """Start the autonomous scanner"""
+    global autonomous_scanner
+    
+    try:
+        if not autonomous_scanner:
+            autonomous_scanner = AutonomousScanner(config, logger)
+        
+        autonomous_scanner.start()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Autonomous scanner started',
+            'status': autonomous_scanner.get_status()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/autonomous/stop', methods=['POST'])
+def stop_autonomous_scanner():
+    """Stop the autonomous scanner"""
+    global autonomous_scanner
+    
+    if not autonomous_scanner:
+        return jsonify({'error': 'Scanner not initialized'}), 400
+    
+    try:
+        autonomous_scanner.stop()
+        return jsonify({
+            'success': True,
+            'message': 'Autonomous scanner stopped'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/autonomous/status', methods=['GET'])
+def get_autonomous_status():
+    """Get autonomous scanner status"""
+    global autonomous_scanner
+    
+    if not autonomous_scanner:
+        return jsonify({
+            'is_running': False,
+            'message': 'Scanner not initialized'
+        })
+    
+    try:
+        status = autonomous_scanner.get_status()
+        return jsonify({
+            'success': True,
+            'status': status
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/autonomous/opportunities', methods=['GET'])
+def get_opportunities():
+    """Get discovered opportunities"""
+    global autonomous_scanner
+    
+    if not autonomous_scanner:
+        return jsonify({'error': 'Scanner not initialized'}), 400
+    
+    limit = request.args.get('limit', 20, type=int)
+    
+    try:
+        opportunities = autonomous_scanner.get_opportunities(limit)
+        return jsonify({
+            'success': True,
+            'opportunities': opportunities
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/autonomous/stats', methods=['GET'])
+def get_execution_stats():
+    """Get execution statistics"""
+    global autonomous_scanner
+    
+    if not autonomous_scanner:
+        return jsonify({'error': 'Scanner not initialized'}), 400
+    
+    try:
+        stats = autonomous_scanner.get_execution_stats()
+        return jsonify({
+            'success': True,
+            'stats': stats
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/autonomous/approvals', methods=['GET'])
+def get_pending_approvals():
+    """Get pending transaction approvals"""
+    global autonomous_scanner
+    
+    if not autonomous_scanner:
+        return jsonify({'error': 'Scanner not initialized'}), 400
+    
+    try:
+        approvals = autonomous_scanner.get_pending_approvals()
+        return jsonify({
+            'success': True,
+            'approvals': approvals
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/autonomous/approve/<network>/<approval_id>', methods=['POST'])
+def approve_transaction(network, approval_id):
+    """Approve a pending transaction"""
+    global autonomous_scanner
+    
+    if not autonomous_scanner:
+        return jsonify({'error': 'Scanner not initialized'}), 400
+    
+    try:
+        success = autonomous_scanner.approve_transaction(network, approval_id)
+        return jsonify({
+            'success': success,
+            'message': 'Transaction approved' if success else 'Approval failed'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/autonomous/reject/<network>/<approval_id>', methods=['POST'])
+def reject_transaction(network, approval_id):
+    """Reject a pending transaction"""
+    global autonomous_scanner
+    
+    if not autonomous_scanner:
+        return jsonify({'error': 'Scanner not initialized'}), 400
+    
+    try:
+        success = autonomous_scanner.reject_transaction(network, approval_id)
+        return jsonify({
+            'success': success,
+            'message': 'Transaction rejected' if success else 'Rejection failed'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/autonomous/config', methods=['GET', 'POST'])
+def manage_config():
+    """Get or update configuration"""
+    global config, autonomous_scanner
+    
+    if request.method == 'GET':
+        return jsonify({
+            'success': True,
+            'config': config.to_dict()
+        })
+    
+    # POST - update configuration
+    try:
+        data = request.json
+        config.update(**data)
+        
+        # If scanner is running, update its config too
+        if autonomous_scanner:
+            autonomous_scanner.update_config(**data)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Configuration updated',
+            'config': config.to_dict()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+
+@app.route('/api/logs/transactions', methods=['GET'])
+def get_transaction_logs():
+    """Get transaction history from logs"""
+    limit = request.args.get('limit', 100, type=int)
+    
+    try:
+        logs = logger.get_transaction_history(limit)
+        return jsonify({
+            'success': True,
+            'logs': logs
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
 
 
 def run_server(host='0.0.0.0', port=5000, debug=False):
