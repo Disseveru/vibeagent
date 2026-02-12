@@ -894,7 +894,10 @@
                 if (data.success) {
                     currentStrategy = data.opportunity;
                     const resultDiv = document.getElementById('arbitrageResult');
-                    resultDiv.innerHTML = `<h3>Opportunity Found!</h3><pre>${JSON.stringify(data.opportunity, null, 2)}</pre>`;
+                    const preElement = document.createElement('pre');
+                    preElement.textContent = JSON.stringify(data.opportunity, null, 2);
+                    resultDiv.innerHTML = '<h3>Opportunity Found!</h3>';
+                    resultDiv.appendChild(preElement);
                     resultDiv.classList.remove('hidden');
                     showStatus('Arbitrage opportunity analyzed!', 'success');
                 } else {
@@ -924,7 +927,10 @@
                     if (data.opportunities.length > 0) {
                         currentStrategy = data.opportunities[0];
                         const resultDiv = document.getElementById('liquidationResult');
-                        resultDiv.innerHTML = `<h3>Opportunities Found!</h3><pre>${JSON.stringify(data.opportunities, null, 2)}</pre>`;
+                        const preElement = document.createElement('pre');
+                        preElement.textContent = JSON.stringify(data.opportunities, null, 2);
+                        resultDiv.innerHTML = '<h3>Opportunities Found!</h3>';
+                        resultDiv.appendChild(preElement);
                         resultDiv.classList.remove('hidden');
                         showStatus(`Found ${data.opportunities.length} liquidation opportunities!`, 'success');
                     } else {
@@ -1244,25 +1250,47 @@
             if (approvals.length > 0) {
                 approvalsDiv.classList.remove('hidden');
                 
-                approvalsContent.innerHTML = approvals.map(approval => {
+                approvalsContent.innerHTML = approvals.map((approval, index) => {
                     const opp = approval.opportunity;
+                    const profitValue = parseFloat(opp.estimated_profit_usd) || 0;
                     return `
                         <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0;">
-                            <p><strong>Type:</strong> ${opp.type}</p>
-                            <p><strong>Network:</strong> ${approval.network}</p>
-                            <p><strong>Estimated Profit:</strong> $${opp.estimated_profit_usd.toFixed(2)}</p>
-                            <p><strong>Submitted:</strong> ${approval.submitted_at}</p>
-                            <button onclick="approveTransaction('${approval.network}', '${approval.approval_id}')" 
-                                    class="btn-secondary" style="margin-right: 10px;">
+                            <p><strong>Type:</strong> ${escapeHtml(opp.type)}</p>
+                            <p><strong>Network:</strong> ${escapeHtml(approval.network)}</p>
+                            <p><strong>Estimated Profit:</strong> $${profitValue.toFixed(2)}</p>
+                            <p><strong>Submitted:</strong> ${escapeHtml(approval.submitted_at)}</p>
+                            <button class="btn-secondary approval-action" 
+                                    data-action="approve"
+                                    data-network="${escapeHtml(approval.network)}"
+                                    data-approval-id="${escapeHtml(approval.approval_id)}"
+                                    style="margin-right: 10px;">
                                 ✓ Approve
                             </button>
-                            <button onclick="rejectTransaction('${approval.network}', '${approval.approval_id}')" 
+                            <button class="approval-action" 
+                                    data-action="reject"
+                                    data-network="${escapeHtml(approval.network)}"
+                                    data-approval-id="${escapeHtml(approval.approval_id)}"
                                     style="background: #f14668;">
                                 ✗ Reject
                             </button>
                         </div>
                     `;
                 }).join('');
+                
+                // Attach event listeners to buttons
+                document.querySelectorAll('.approval-action').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const action = this.getAttribute('data-action');
+                        const network = this.getAttribute('data-network');
+                        const approvalId = this.getAttribute('data-approval-id');
+                        
+                        if (action === 'approve') {
+                            approveTransaction(network, approvalId);
+                        } else if (action === 'reject') {
+                            rejectTransaction(network, approvalId);
+                        }
+                    });
+                });
             } else {
                 approvalsDiv.classList.add('hidden');
             }
@@ -1351,10 +1379,10 @@
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/static/service-worker.js')
                     .then(function(registration) {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        // ServiceWorker registered successfully
                     })
                     .catch(function(err) {
-                        console.log('ServiceWorker registration failed: ', err);
+                        // ServiceWorker registration failed
                     });
             });
         }
@@ -1373,7 +1401,6 @@
         function showInstallPromotion() {
             // Check if already installed
             if (window.matchMedia('(display-mode: standalone)').matches) {
-                console.log('App is already installed');
                 return;
             }
             
@@ -1400,11 +1427,6 @@
                 deferredPrompt.prompt();
                 // Wait for the user to respond to the prompt
                 deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
-                    } else {
-                        console.log('User dismissed the install prompt');
-                    }
                     deferredPrompt = null;
                 });
             }
