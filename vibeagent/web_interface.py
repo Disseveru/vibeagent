@@ -269,7 +269,7 @@ def get_wallet_balance(address):
 
     try:
         # Use agent's web3 connection to get balance
-        balance_wei = agent.w3.eth.get_balance(address)
+        balance_wei = agent.web3.eth.get_balance(address)
         balance_eth = balance_wei / 1e18
 
         return jsonify(
@@ -291,8 +291,8 @@ def get_transaction(tx_hash):
         return jsonify({"error": "Agent not initialized"}), 400
 
     try:
-        tx = agent.w3.eth.get_transaction(tx_hash)
-        receipt = agent.w3.eth.get_transaction_receipt(tx_hash)
+        tx = agent.web3.eth.get_transaction(tx_hash)
+        receipt = agent.web3.eth.get_transaction_receipt(tx_hash)
 
         return jsonify(
             {
