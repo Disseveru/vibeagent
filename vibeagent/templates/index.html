@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VibeAgent - DeFi Strategy Generator</title>
+    <title>VibeAgent - Real-Time DeFi Streams</title>
     
     <!-- PWA Meta Tags for Android -->
-    <meta name="description" content="AI-Powered DeFi Strategy Generator for Instadapp Avocado Multi-Sig Wallet">
+    <meta name="description" content="Real-time DeFi opportunity scanner with Reown wallet connect. Arbitrage, liquidations, and cross-chain spreads for everyone.">
     <meta name="theme-color" content="#667eea">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -29,7 +29,8 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #050607;
+            color: #e5e7eb;
             min-height: 100vh;
             padding: 20px;
         }
@@ -37,20 +38,21 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+            background: radial-gradient(120% 120% at 0% 0%, #0f1624 0%, #0a0c12 40%, #050607 100%);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 1px solid #1f2937;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.65);
         }
         
         h1 {
-            color: #667eea;
+            color: #7ad7f0;
             margin-bottom: 10px;
             font-size: 2.5em;
         }
         
         .subtitle {
-            color: #666;
+            color: #a5b4fc;
             margin-bottom: 30px;
             font-size: 1.1em;
         }
@@ -58,12 +60,13 @@
         .section {
             margin-bottom: 30px;
             padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
+            background: #0b1220;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
         }
         
         .section h2 {
-            color: #333;
+            color: #e5e7eb;
             margin-bottom: 15px;
             font-size: 1.5em;
         }
@@ -75,39 +78,43 @@
         label {
             display: block;
             margin-bottom: 5px;
-            color: #555;
+            color: #cbd5e1;
             font-weight: 600;
         }
         
         input, select, textarea {
             width: 100%;
             padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            border: 1px solid #1f2937;
+            border-radius: 10px;
             font-size: 14px;
-            transition: border-color 0.3s;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: #0f172a;
+            color: #e5e7eb;
         }
         
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #22d3ee;
+            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
         }
         
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #22d3ee 0%, #6366f1 100%);
             color: white;
             border: none;
             padding: 12px 30px;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
         }
         
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 28px rgba(99, 102, 241, 0.45);
+            filter: brightness(1.05);
         }
         
         button:active {
@@ -140,27 +147,30 @@
         
         .status {
             padding: 10px 15px;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 15px;
             font-weight: 600;
+            background: #0f172a;
+            border: 1px solid #1f2937;
+            color: #e5e7eb;
         }
         
         .status.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: #0f2c24;
+            color: #34d399;
+            border: 1px solid #065f46;
         }
         
         .status.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: #2a0f16;
+            color: #fca5a5;
+            border: 1px solid #7f1d1d;
         }
         
         .status.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+            background: #0f172a;
+            color: #93c5fd;
+            border: 1px solid #1d4ed8;
         }
         
         .grid {
@@ -170,20 +180,21 @@
         }
         
         .card {
-            background: white;
+            background: #0f172a;
             padding: 20px;
-            border-radius: 10px;
-            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            border: 1px solid #1f2937;
             transition: all 0.3s;
+            color: #e5e7eb;
         }
         
         .card:hover {
-            border-color: #667eea;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            border-color: #22d3ee;
+            box-shadow: 0 5px 20px rgba(34, 211, 238, 0.18);
         }
         
         .card h3 {
-            color: #667eea;
+            color: #7ad7f0;
             margin-bottom: 10px;
         }
         
@@ -265,32 +276,205 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        .landing {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: #050607;
+        }
+        
+        .hero-card {
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(99, 102, 241, 0.08));
+            border: 1px solid #1f2937;
+            padding: 40px 32px;
+            border-radius: 20px;
+            max-width: 620px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+        }
+        
+        .hero-card h1 {
+            font-size: 2.7em;
+            color: #7ad7f0;
+        }
+        
+        .hero-card p {
+            color: #cbd5e1;
+            margin: 16px 0 28px 0;
+            line-height: 1.6;
+        }
+        
+        .reown-btn {
+            font-size: 18px;
+            padding: 14px 40px;
+            background: linear-gradient(120deg, #22d3ee 0%, #6366f1 100%);
+            border: 1px solid #38bdf8;
+        }
+        
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        
+        .pill {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(34, 211, 238, 0.12);
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            color: #7ad7f0;
+            font-size: 13px;
+        }
+        
+        .streams {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 14px;
+        }
+        
+        .stream-card {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(7, 11, 19, 0.95));
+            border: 1px solid #1f2937;
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+        }
+        
+        .stream-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #e5e7eb;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .tile {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #0b1220;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            gap: 12px;
+        }
+        
+        .tile .pair {
+            font-weight: 700;
+            color: #e5e7eb;
+        }
+        
+        .tile .meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        
+        .network-badge {
+            padding: 6px 10px;
+            border-radius: 10px;
+            background: rgba(124, 58, 237, 0.12);
+            color: #c4b5fd;
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            font-weight: 700;
+            font-size: 12px;
+        }
+        
+        .metric {
+            color: #7ad7f0;
+            font-weight: 700;
+        }
+        
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #22d3ee, #6366f1);
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            color: #0b1220;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🚀 VibeAgent</h1>
-        <p class="subtitle">AI-Powered DeFi Strategy Generator for Instadapp Avocado Multi-Sig Wallet</p>
-        
-        <div id="statusMessage"></div>
-        
-        <!-- Configuration Section -->
-        <div class="section">
-            <h2>⚙️ Configuration</h2>
-            <div class="form-group">
-                <label for="network">Select Network:</label>
-                <select id="network">
-                    <option value="ethereum">Ethereum Mainnet</option>
-                    <option value="polygon">Polygon</option>
-                    <option value="arbitrum">Arbitrum</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="walletAddress">Avocado Multi-Sig Wallet Address:</label>
-                <input type="text" id="walletAddress" placeholder="0x..." />
-            </div>
-            <button onclick="initializeAgent()">Initialize Agent</button>
+    <div id="landing" class="landing">
+        <div class="hero-card">
+            <h1>⚡ VibeAgent</h1>
+            <p>Connect your Reown wallet to stream real-time arbitrage, liquidation, and cross-chain discrepancies. Lightning-fast paths are lined up for you to pick and execute without needing to code.</p>
+            <button class="reown-btn" onclick="connectWallet()">Connect with Reown</button>
+            <div id="connectStatus" class="status info hidden" style="margin-top: 18px;"></div>
         </div>
+    </div>
+    <div id="appContent" class="hidden">
+        <div class="container">
+            <div class="header-row">
+                <div>
+                    <h1>⚡ VibeAgent</h1>
+                    <p class="subtitle">Real-time DeFi advantage for everyone — arbitrage, liquidations, and cross-chain spreads.</p>
+                </div>
+                <div id="connectedBadge" class="pill hidden"></div>
+            </div>
+            
+            <div id="statusMessage"></div>
+            
+            <div class="section">
+                <h2>📡 Live Opportunity Streams</h2>
+                <p style="color: #94a3b8; margin-bottom: 10px;">Trending plays update in real time with network visuals so you can jump in instantly.</p>
+                <div class="streams">
+                    <div class="stream-card">
+                        <div class="stream-title">
+                            <span>🔄 Trending Arbitrage</span>
+                            <span class="metric">Live</span>
+                        </div>
+                        <div id="arbStream"></div>
+                        <button style="width: 100%; margin-top: 8px;" onclick="switchTab('arbitrage', event)">Open Arbitrage Scanner</button>
+                    </div>
+                    <div class="stream-card">
+                        <div class="stream-title">
+                            <span>💎 Liquidations</span>
+                            <span class="metric">Near Threshold</span>
+                        </div>
+                        <div id="liqStream"></div>
+                        <button style="width: 100%; margin-top: 8px;" onclick="switchTab('liquidation', event)">Review Liquidations</button>
+                    </div>
+                    <div class="stream-card">
+                        <div class="stream-title">
+                            <span>🌐 Cross-Chain Spreads</span>
+                            <span class="metric">Arb Paths</span>
+                        </div>
+                        <div id="xchainStream"></div>
+                        <button style="width: 100%; margin-top: 8px;" onclick="switchTab('arbitrage', event)">Open Cross-Chain</button>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- Configuration Section -->
+            <div class="section">
+                <h2>⚙️ Execution Setup</h2>
+                <div class="form-group">
+                    <label for="network">Select Network:</label>
+                    <select id="network">
+                        <option value="ethereum">Ethereum Mainnet</option>
+                        <option value="polygon">Polygon</option>
+                        <option value="arbitrum">Arbitrum</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="walletAddress">Connected Wallet (Reown):</label>
+                    <input type="text" id="walletAddress" placeholder="0x..." />
+                </div>
+                <button onclick="initializeAgent()">Initialize Agent</button>
+            </div>
         
         <!-- Autonomous Mode Section -->
         <div class="section" id="autonomousSection">
@@ -354,8 +538,8 @@
         
         <!-- Strategy Selection -->
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('arbitrage')">Arbitrage</button>
-            <button class="tab" onclick="switchTab('liquidation')">Liquidation</button>
+            <button class="tab active" data-tab="arbitrage" onclick="switchTab('arbitrage', event)">Arbitrage</button>
+            <button class="tab" data-tab="liquidation" onclick="switchTab('liquidation', event)">Liquidation</button>
         </div>
         
         <!-- Arbitrage Tab -->
@@ -401,10 +585,9 @@
         
         <!-- Export Section -->
         <div class="section">
-            <h2>📤 Export for Avocado Transaction Builder</h2>
-            <p style="color: #666; margin-bottom: 15px;">
-                Generate the transaction batch and import it into your Avocado wallet at 
-                <a href="https://avocado.instadapp.io" target="_blank" style="color: #667eea;">avocado.instadapp.io</a>
+            <h2>📤 Execute & Simulate</h2>
+            <p style="color: #94a3b8; margin-bottom: 15px;">
+                Generate a transaction bundle for your connected wallet or execution service. Keep an eye on gas and profits before sending to stay ahead of bots.
             </p>
             <button class="btn-secondary" onclick="exportStrategy()">Export Last Strategy</button>
             <button class="btn-warning" onclick="simulateStrategy()">Simulate Execution</button>
@@ -416,27 +599,179 @@
             <h2>📚 How to Use</h2>
             <div class="grid">
                 <div class="card">
-                    <h3>1. Configure</h3>
-                    <p>Select your network and enter your Avocado multi-sig wallet address, then initialize the agent.</p>
+                    <h3>1. Connect</h3>
+                    <p>Use Reown connect on the landing screen, then pick the network you want to target.</p>
                 </div>
                 <div class="card">
-                    <h3>2. Scan</h3>
-                    <p>Choose arbitrage or liquidation, enter the required parameters, and scan for opportunities.</p>
+                    <h3>2. Explore streams</h3>
+                    <p>Pick trending arbitrage, liquidation, or cross-chain spreads and open the relevant scanner.</p>
                 </div>
                 <div class="card">
-                    <h3>3. Export</h3>
-                    <p>Export the generated strategy as a transaction batch for your Avocado wallet.</p>
+                    <h3>3. Analyze</h3>
+                    <p>Scan or simulate the strategy to confirm profitability, gas, and safety checks.</p>
                 </div>
                 <div class="card">
                     <h3>4. Execute</h3>
-                    <p>Import the JSON file into Avocado's transaction builder and execute with your multi-sig.</p>
+                    <p>Send the bundle with your connected wallet or your preferred execution/bundling flow.</p>
                 </div>
             </div>
         </div>
     </div>
-    
+</div>
+
     <script>
         let currentStrategy = null;
+        let connectedWallet = null;
+        let liveInterval = null;
+        
+        const liveFeeds = {
+            arbitrage: [
+                { pair: "ETH / USDC", network: "Ethereum", spread: 1.8, depth: 1200000, icon: "Ξ" },
+                { pair: "WBTC / ETH", network: "Arbitrum", spread: 0.9, depth: 620000, icon: "₿" },
+                { pair: "ARB / USDC", network: "Arbitrum", spread: 1.3, depth: 480000, icon: "A" }
+            ],
+            liquidation: [
+                { account: "0x9f3...12c", network: "Aave v3", health: 1.06, debt: 120000, icon: "A" },
+                { account: "0x7bd...54e", network: "Compound", health: 1.02, debt: 84000, icon: "C" },
+                { account: "0x123...b90", network: "Aave v3", health: 1.08, debt: 210000, icon: "A" }
+            ],
+            cross: [
+                { pair: "USDC → USDT", network: "Eth → Polygon", spread: 0.72, depth: 2100000, icon: "⇄" },
+                { pair: "ETH → WETH", network: "Arb → Mainnet", spread: 0.58, depth: 980000, icon: "Ξ" },
+                { pair: "OP → ETH", network: "OP → Arb", spread: 0.63, depth: 410000, icon: "◎" }
+            ]
+        };
+        
+        function formatAddress(addr) {
+            return addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : '';
+        }
+        
+        function formatUsd(value) {
+            return `$${Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+        }
+        
+        async function connectWallet() {
+            const connectStatus = document.getElementById('connectStatus');
+            connectStatus.classList.remove('hidden', 'error', 'success');
+            connectStatus.classList.add('info');
+            connectStatus.textContent = 'Requesting wallet connection...';
+            
+            if (!window.ethereum) {
+                connectStatus.textContent = 'Reown connect needs a browser wallet (e.g., MetaMask).';
+                connectStatus.classList.remove('info');
+                connectStatus.classList.add('error');
+                return;
+            }
+            
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                connectedWallet = accounts[0];
+                
+                document.getElementById('walletAddress').value = connectedWallet;
+                document.getElementById('landing').classList.add('hidden');
+                document.getElementById('appContent').classList.remove('hidden');
+                
+                const badge = document.getElementById('connectedBadge');
+                badge.textContent = `Connected: ${formatAddress(connectedWallet)}`;
+                badge.classList.remove('hidden');
+                
+                connectStatus.textContent = 'Reown wallet connected';
+                connectStatus.classList.remove('info');
+                connectStatus.classList.add('success');
+                
+                showStatus('Reown wallet connected — ready to stream opportunities.', 'success');
+                startLiveTicker();
+            } catch (error) {
+                connectStatus.textContent = error?.message || 'Connection rejected';
+                connectStatus.classList.remove('info');
+                connectStatus.classList.add('error');
+            }
+        }
+        
+        function startLiveTicker() {
+            renderStreams();
+            if (liveInterval) clearInterval(liveInterval);
+            liveInterval = setInterval(() => {
+                updateLiveFeeds();
+                renderStreams();
+            }, 4000);
+        }
+        
+        function updateLiveFeeds() {
+            liveFeeds.arbitrage = liveFeeds.arbitrage.map(item => ({
+                ...item,
+                spread: Math.max(0, item.spread + (Math.random() * 0.4 - 0.2)),
+                depth: Math.max(250000, item.depth * (0.985 + Math.random() * 0.03))
+            }));
+            
+            liveFeeds.liquidation = liveFeeds.liquidation.map(item => ({
+                ...item,
+                health: Math.max(0.96, item.health + (Math.random() * 0.02 - 0.01)),
+                debt: Math.max(50000, item.debt * (0.98 + Math.random() * 0.03))
+            }));
+            
+            liveFeeds.cross = liveFeeds.cross.map(item => ({
+                ...item,
+                spread: Math.max(0, item.spread + (Math.random() * 0.25 - 0.12)),
+                depth: Math.max(250000, item.depth * (0.985 + Math.random() * 0.03))
+            }));
+        }
+        
+        function renderStreams() {
+            const arbEl = document.getElementById('arbStream');
+            const liqEl = document.getElementById('liqStream');
+            const xchainEl = document.getElementById('xchainStream');
+            
+            if (!arbEl || !liqEl || !xchainEl) return;
+            
+            arbEl.innerHTML = liveFeeds.arbitrage.map(item => `
+                <div class="tile">
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <div class="avatar">${item.icon}</div>
+                        <div>
+                                <div class="pair">${item.pair}</div>
+                                <div class="meta">
+                                    <span class="network-badge">${item.network}</span>
+                                    <span>${formatUsd(item.depth)} depth</span>
+                                </div>
+                            </div>
+                        </div>
+                    <div class="metric">${item.spread.toFixed(2)}%</div>
+                </div>
+            `).join('');
+            
+            liqEl.innerHTML = liveFeeds.liquidation.map(item => `
+                <div class="tile">
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <div class="avatar">${item.icon}</div>
+                        <div>
+                                <div class="pair">${item.account}</div>
+                                <div class="meta">
+                                    <span class="network-badge">${item.network}</span>
+                                    <span>${formatUsd(item.debt)} debt</span>
+                                </div>
+                            </div>
+                        </div>
+                    <div class="metric" style="color:${item.health < 1.04 ? '#f97316' : '#7ad7f0'};">HL: ${item.health.toFixed(2)}</div>
+                </div>
+            `).join('');
+            
+            xchainEl.innerHTML = liveFeeds.cross.map(item => `
+                <div class="tile">
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <div class="avatar">${item.icon}</div>
+                        <div>
+                                <div class="pair">${item.pair}</div>
+                                <div class="meta">
+                                    <span class="network-badge">${item.network}</span>
+                                    <span>${formatUsd(item.depth)} route</span>
+                                </div>
+                            </div>
+                        </div>
+                    <div class="metric">${item.spread.toFixed(2)}%</div>
+                </div>
+            `).join('');
+        }
         
         function showStatus(message, type = 'info') {
             const statusDiv = document.getElementById('statusMessage');
@@ -449,14 +784,13 @@
             }, 5000);
         }
         
-        function switchTab(tabName) {
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
+        function switchTab(tabName, evt) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            const target = evt?.target || document.querySelector(`.tab[data-tab="${tabName}"]`);
+            if (target) {
+                target.classList.add('active');
+            }
             
-            // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
@@ -468,7 +802,7 @@
             const walletAddress = document.getElementById('walletAddress').value;
             
             if (!walletAddress) {
-                showStatus('Please enter your Avocado wallet address', 'error');
+                showStatus('Please connect your wallet before initializing.', 'error');
                 return;
             }
             
@@ -565,7 +899,7 @@
                 return;
             }
             
-            showStatus('Exporting strategy for Avocado...', 'info');
+            showStatus('Preparing a transaction bundle for your wallet...', 'info');
             
             try {
                 const response = await fetch('/api/strategy/export', {
@@ -579,17 +913,16 @@
                 if (data.success) {
                     const resultDiv = document.getElementById('exportResult');
                     resultDiv.innerHTML = `
-                        <h3>✅ Transaction Batch Generated!</h3>
-                        <p style="margin: 10px 0; color: #28a745;">
-                            Your transaction batch is ready to import into Avocado Transaction Builder.
+                        <h3>✅ Transaction Bundle Ready</h3>
+                        <p style="margin: 10px 0; color: #22d3ee;">
+                            Your bundle is ready to execute from your connected wallet or preferred bundler.
                         </p>
                         <p style="margin: 10px 0;">
                             <strong>Next Steps:</strong><br>
                             1. Copy the JSON below<br>
-                            2. Go to <a href="https://avocado.instadapp.io" target="_blank">avocado.instadapp.io</a><br>
-                            3. Open Transaction Builder<br>
-                            4. Import this JSON file<br>
-                            5. Review and execute with your multi-sig signers
+                            2. Load it into your signing flow (Safe, EOAs, or Reown-enabled apps)<br>
+                            3. Review gas, profit, and safety settings<br>
+                            4. Send when you are ready
                         </p>
                         <pre>${JSON.stringify(data.transaction_batch, null, 2)}</pre>
                         <button onclick="copyToClipboard()">Copy to Clipboard</button>
