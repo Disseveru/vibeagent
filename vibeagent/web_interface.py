@@ -226,6 +226,7 @@ def run_server(host='0.0.0.0', port=5000, debug=False):
 
 
 if __name__ == '__main__':
-    port = int(os.getenv('FLASK_PORT', 5000))
+    # Check for PORT environment variable (used by Render, Heroku, etc.)
+    port = int(os.getenv('PORT', os.getenv('FLASK_PORT', 5000)))
     debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
     run_server(port=port, debug=debug)

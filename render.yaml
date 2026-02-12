@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: vibeagent
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "bash start.sh"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: FLASK_PORT
+        value: 10000
+      - key: FLASK_DEBUG
+        value: false
+      - key: ETHEREUM_RPC_URL
+        sync: false
+      - key: POLYGON_RPC_URL
+        sync: false
+      - key: ARBITRUM_RPC_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: MIN_PROFIT_USD
+        value: 50
+      - key: MAX_GAS_PRICE_GWEI
+        value: 100
+      - key: FLASH_LOAN_PROVIDER
+        value: aave_v3
