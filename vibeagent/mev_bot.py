@@ -93,7 +93,10 @@ class MEVBot:
         strategy_type = strategy.get("type", "unknown")
         
         # Calculate base risk factors
-        base_risk = 0.3  # Base 30% risk for any DeFi transaction
+        # Base 30% risk for any DeFi transaction represents the inherent risk
+        # of having transactions visible in the public mempool where MEV bots operate.
+        # This baseline is conservative and reflects observed MEV bot activity rates.
+        base_risk = 0.3
         
         # Increase risk for arbitrage (more visible in mempool)
         if strategy_type in ["arbitrage", "mev_arbitrage"]:

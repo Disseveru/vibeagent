@@ -102,10 +102,10 @@ def test_sandwich_risk_analysis():
         "steps": [
             {"action": "swap"},
             {"action": "swap"}
-        ],
-        "slippage_tolerance": 1.5  # High slippage
+        ]
     }
     
+    # Pass slippage_tolerance as parameter (function extracts it from strategy OR accepts as param)
     analysis = mev_bot.analyze_sandwich_risk(strategy, slippage_tolerance=1.5)
     
     assert "sandwich_risk_score" in analysis

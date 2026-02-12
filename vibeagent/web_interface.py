@@ -274,6 +274,10 @@ def analyze_mev_risk():
         return jsonify({'error': 'No strategy provided'}), 400
     
     try:
+        # Validate MEV bot is initialized
+        if not hasattr(agent, 'mev_bot') or agent.mev_bot is None:
+            return jsonify({'error': 'MEV bot not initialized. Please reinitialize the agent.'}), 400
+        
         # Get frontrunning analysis
         frontrun_analysis = agent.mev_bot.analyze_frontrunning_risk(strategy)
         

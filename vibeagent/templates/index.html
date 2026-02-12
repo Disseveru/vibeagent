@@ -780,7 +780,7 @@
                         <div style="background: #f8d7da; padding: 15px; border-radius: 8px; margin: 15px 0;">
                             <h4 style="color: #721c24; margin-bottom: 10px;">🎯 Front-Running Risk</h4>
                             <p><strong>Risk Level:</strong> <span style="color: ${riskColor};">${frontrun.risk_level.toUpperCase()}</span></p>
-                            <p><strong>Risk Score:</strong> ${(frontrun.frontrunning_risk * 100).toFixed(1)}%</p>
+                            <p><strong>Risk Score:</strong> ${(frontrun.mev_risk_score * 100).toFixed(1)}%</p>
                             <p><strong>Profit at Risk:</strong> $${frontrun.estimated_profit_at_risk?.toFixed(2) || '0.00'}</p>
                             <div style="margin-top: 10px;">
                                 <strong>Recommendations:</strong>
