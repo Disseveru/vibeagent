@@ -1250,7 +1250,7 @@
             if (approvals.length > 0) {
                 approvalsDiv.classList.remove('hidden');
                 
-                approvalsContent.innerHTML = approvals.map(approval => {
+                approvalsContent.innerHTML = approvals.map((approval, index) => {
                     const opp = approval.opportunity;
                     return `
                         <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0;">
@@ -1258,17 +1258,38 @@
                             <p><strong>Network:</strong> ${escapeHtml(approval.network)}</p>
                             <p><strong>Estimated Profit:</strong> $${opp.estimated_profit_usd.toFixed(2)}</p>
                             <p><strong>Submitted:</strong> ${escapeHtml(approval.submitted_at)}</p>
-                            <button onclick="approveTransaction('${escapeHtml(approval.network)}', '${escapeHtml(approval.approval_id)}')" 
-                                    class="btn-secondary" style="margin-right: 10px;">
+                            <button class="btn-secondary approval-action" 
+                                    data-action="approve"
+                                    data-network="${escapeHtml(approval.network)}"
+                                    data-approval-id="${escapeHtml(approval.approval_id)}"
+                                    style="margin-right: 10px;">
                                 ✓ Approve
                             </button>
-                            <button onclick="rejectTransaction('${escapeHtml(approval.network)}', '${escapeHtml(approval.approval_id)}')" 
+                            <button class="approval-action" 
+                                    data-action="reject"
+                                    data-network="${escapeHtml(approval.network)}"
+                                    data-approval-id="${escapeHtml(approval.approval_id)}"
                                     style="background: #f14668;">
                                 ✗ Reject
                             </button>
                         </div>
                     `;
                 }).join('');
+                
+                // Attach event listeners to buttons
+                document.querySelectorAll('.approval-action').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const action = this.getAttribute('data-action');
+                        const network = this.getAttribute('data-network');
+                        const approvalId = this.getAttribute('data-approval-id');
+                        
+                        if (action === 'approve') {
+                            approveTransaction(network, approvalId);
+                        } else if (action === 'reject') {
+                            rejectTransaction(network, approvalId);
+                        }
+                    });
+                });
             } else {
                 approvalsDiv.classList.add('hidden');
             }
