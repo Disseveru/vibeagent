@@ -360,8 +360,9 @@ class AutonomousExecutor:
         # Simulate transaction
         time.sleep(1)  # Simulate network delay
         
-        # Generate mock transaction hash
-        mock_tx_hash = f"0x{'a' * 64}"
+        # Generate mock transaction hash (Ethereum tx hash is 32 bytes = 64 hex chars)
+        TX_HASH_HEX_LENGTH = 64
+        mock_tx_hash = f"0x{'a' * TX_HASH_HEX_LENGTH}"
         
         print(f"✓ Transaction simulated successfully")
         print(f"  Mock TX Hash: {mock_tx_hash}")

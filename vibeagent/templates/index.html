@@ -359,6 +359,19 @@
             color: #856404;
             margin: 15px 0;
         }
+        
+        /* Validation result styles */
+        .check-item {
+            color: green;
+        }
+        
+        .error-item {
+            color: red;
+        }
+        
+        .warning-item {
+            color: orange;
+        }
     </style>
 </head>
 <body>
@@ -812,6 +825,12 @@
         // WalletConnect Integration Functions
         // =====================================================================
         
+        // Utility function to format wallet address
+        function formatWalletAddress(address) {
+            if (!address || address.length < 10) return address;
+            return `${address.substring(0, 6)}...${address.substring(38)}`;
+        }
+        
         function toggleWalletModal() {
             const modal = document.getElementById('walletModal');
             if (modal.classList.contains('hidden')) {
@@ -855,7 +874,7 @@
                     walletConnected = true;
                     updateWalletUI(data);
                     closeWalletModal();
-                    showStatus(`Wallet connected: ${walletAddress.substring(0,6)}...${walletAddress.substring(38)}`, 'success');
+                    showStatus(`Wallet connected: ${formatWalletAddress(walletAddress)}`, 'success');
                     updateExecuteControls();
                     checkExecutionStats();
                 } else {
@@ -911,7 +930,7 @@
             
             if (walletData && walletData.wallet_address) {
                 const addr = walletData.wallet_address;
-                btnText.textContent = `${addr.substring(0,6)}...${addr.substring(38)}`;
+                btnText.textContent = formatWalletAddress(addr);
                 btn.onclick = disconnectWallet;
                 
                 statusDiv.innerHTML = `
@@ -987,16 +1006,16 @@
                 
                 const resultDiv = document.getElementById('validationResult');
                 
-                let checksHtml = data.checks.map(c => `<li style="color: green;">${c}</li>`).join('');
-                let errorsHtml = data.errors.map(e => `<li style="color: red;">✗ ${e}</li>`).join('');
-                let warningsHtml = data.warnings.map(w => `<li style="color: orange;">⚠ ${w}</li>`).join('');
+                let checksHtml = data.checks.map(c => `<li class="check-item">${c}</li>`).join('');
+                let errorsHtml = data.errors.map(e => `<li class="error-item">✗ ${e}</li>`).join('');
+                let warningsHtml = data.warnings.map(w => `<li class="warning-item">⚠ ${w}</li>`).join('');
                 
                 resultDiv.innerHTML = `
                     <h3>Safety Validation Results</h3>
-                    <p><strong>Status:</strong> ${data.passed ? '<span style="color: green;">✓ PASSED</span>' : '<span style="color: red;">✗ FAILED</span>'}</p>
+                    <p><strong>Status:</strong> ${data.passed ? '<span class="check-item">✓ PASSED</span>' : '<span class="error-item">✗ FAILED</span>'}</p>
                     ${checksHtml ? `<ul>${checksHtml}</ul>` : ''}
-                    ${errorsHtml ? `<h4 style="color: red;">Errors:</h4><ul>${errorsHtml}</ul>` : ''}
-                    ${warningsHtml ? `<h4 style="color: orange;">Warnings:</h4><ul>${warningsHtml}</ul>` : ''}
+                    ${errorsHtml ? `<h4 class="error-item">Errors:</h4><ul>${errorsHtml}</ul>` : ''}
+                    ${warningsHtml ? `<h4 class="warning-item">Warnings:</h4><ul>${warningsHtml}</ul>` : ''}
                 `;
                 resultDiv.classList.remove('hidden');
                 

@@ -282,8 +282,8 @@ class WalletConnector:
             was_connected = self.connected
             old_address = self.wallet_address
             
-            # Reinitialize with new network
-            self.__init__(network)
+            # Reinitialize with new network using dedicated method
+            self._reinitialize(network)
             
             # If was connected, attempt to reconnect with same address
             if was_connected and old_address:
@@ -301,6 +301,31 @@ class WalletConnector:
                 "success": False,
                 "error": str(e)
             }
+    
+    def _reinitialize(self, network: str):
+        """
+        Reinitialize the connector with a new network
+        
+        Args:
+            network: Network name to switch to
+        """
+        self.network = network
+        self.network_info = self.SUPPORTED_NETWORKS[network]
+        self.chain_id = self.network_info["chain_id"]
+        
+        # Reinitialize Web3 connection
+        rpc_url = os.getenv(self.network_info["rpc_url_key"])
+        if not rpc_url:
+            raise ValueError(f"RPC URL not configured for {network}. Set {self.network_info['rpc_url_key']} in .env")
+        
+        self.web3 = Web3(Web3.HTTPProvider(rpc_url))
+        
+        # Reset connection state
+        self.connected = False
+        self.wallet_address = None
+        self.session_data = {}
+        self.connection_timestamp = None
+        self.pending_requests = {}
     
     def create_transaction_request(
         self,
