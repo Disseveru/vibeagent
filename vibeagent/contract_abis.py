@@ -10,36 +10,42 @@ ERC20_ABI = [
         "inputs": [],
         "name": "decimals",
         "outputs": [{"name": "", "type": "uint8"}],
-        "type": "function",
+        "type": "function"
     },
     {
         "constant": True,
         "inputs": [],
         "name": "symbol",
         "outputs": [{"name": "", "type": "string"}],
-        "type": "function",
+        "type": "function"
     },
     {
         "constant": True,
         "inputs": [{"name": "_owner", "type": "address"}],
         "name": "balanceOf",
         "outputs": [{"name": "balance", "type": "uint256"}],
-        "type": "function",
+        "type": "function"
     },
     {
         "constant": False,
-        "inputs": [{"name": "_spender", "type": "address"}, {"name": "_value", "type": "uint256"}],
+        "inputs": [
+            {"name": "_spender", "type": "address"},
+            {"name": "_value", "type": "uint256"}
+        ],
         "name": "approve",
         "outputs": [{"name": "", "type": "bool"}],
-        "type": "function",
+        "type": "function"
     },
     {
         "constant": False,
-        "inputs": [{"name": "_to", "type": "address"}, {"name": "_value", "type": "uint256"}],
+        "inputs": [
+            {"name": "_to", "type": "address"},
+            {"name": "_value", "type": "uint256"}
+        ],
         "name": "transfer",
         "outputs": [{"name": "", "type": "bool"}],
-        "type": "function",
-    },
+        "type": "function"
+    }
 ]
 
 # Uniswap V3 Quoter (for price quotes)
@@ -50,12 +56,12 @@ UNISWAP_V3_QUOTER_ABI = [
             {"internalType": "address", "name": "tokenOut", "type": "address"},
             {"internalType": "uint24", "name": "fee", "type": "uint24"},
             {"internalType": "uint256", "name": "amountIn", "type": "uint256"},
-            {"internalType": "uint160", "name": "sqrtPriceLimitX96", "type": "uint160"},
+            {"internalType": "uint160", "name": "sqrtPriceLimitX96", "type": "uint160"}
         ],
         "name": "quoteExactInputSingle",
         "outputs": [{"internalType": "uint256", "name": "amountOut", "type": "uint256"}],
         "stateMutability": "nonpayable",
-        "type": "function",
+        "type": "function"
     }
 ]
 
@@ -72,17 +78,17 @@ UNISWAP_V3_ROUTER_ABI = [
                     {"internalType": "uint256", "name": "deadline", "type": "uint256"},
                     {"internalType": "uint256", "name": "amountIn", "type": "uint256"},
                     {"internalType": "uint256", "name": "amountOutMinimum", "type": "uint256"},
-                    {"internalType": "uint160", "name": "sqrtPriceLimitX96", "type": "uint160"},
+                    {"internalType": "uint160", "name": "sqrtPriceLimitX96", "type": "uint160"}
                 ],
                 "internalType": "struct ISwapRouter.ExactInputSingleParams",
                 "name": "params",
-                "type": "tuple",
+                "type": "tuple"
             }
         ],
         "name": "exactInputSingle",
         "outputs": [{"internalType": "uint256", "name": "amountOut", "type": "uint256"}],
         "stateMutability": "payable",
-        "type": "function",
+        "type": "function"
     }
 ]
 
@@ -91,12 +97,14 @@ SUSHISWAP_ROUTER_ABI = [
     {
         "inputs": [
             {"internalType": "uint256", "name": "amountIn", "type": "uint256"},
-            {"internalType": "address[]", "name": "path", "type": "address[]"},
+            {"internalType": "address[]", "name": "path", "type": "address[]"}
         ],
         "name": "getAmountsOut",
-        "outputs": [{"internalType": "uint256[]", "name": "amounts", "type": "uint256[]"}],
+        "outputs": [
+            {"internalType": "uint256[]", "name": "amounts", "type": "uint256[]"}
+        ],
         "stateMutability": "view",
-        "type": "function",
+        "type": "function"
     },
     {
         "inputs": [
@@ -104,13 +112,15 @@ SUSHISWAP_ROUTER_ABI = [
             {"internalType": "uint256", "name": "amountOutMin", "type": "uint256"},
             {"internalType": "address[]", "name": "path", "type": "address[]"},
             {"internalType": "address", "name": "to", "type": "address"},
-            {"internalType": "uint256", "name": "deadline", "type": "uint256"},
+            {"internalType": "uint256", "name": "deadline", "type": "uint256"}
         ],
         "name": "swapExactTokensForTokens",
-        "outputs": [{"internalType": "uint256[]", "name": "amounts", "type": "uint256[]"}],
+        "outputs": [
+            {"internalType": "uint256[]", "name": "amounts", "type": "uint256[]"}
+        ],
         "stateMutability": "nonpayable",
-        "type": "function",
-    },
+        "type": "function"
+    }
 ]
 
 # Aave V3 Pool (flashLoan, liquidationCall, getUserAccountData)
@@ -123,12 +133,12 @@ AAVE_V3_POOL_ABI = [
             {"internalType": "uint256[]", "name": "modes", "type": "uint256[]"},
             {"internalType": "address", "name": "onBehalfOf", "type": "address"},
             {"internalType": "bytes", "name": "params", "type": "bytes"},
-            {"internalType": "uint16", "name": "referralCode", "type": "uint16"},
+            {"internalType": "uint16", "name": "referralCode", "type": "uint16"}
         ],
         "name": "flashLoan",
         "outputs": [],
         "stateMutability": "nonpayable",
-        "type": "function",
+        "type": "function"
     },
     {
         "inputs": [
@@ -136,12 +146,12 @@ AAVE_V3_POOL_ABI = [
             {"internalType": "address", "name": "debtAsset", "type": "address"},
             {"internalType": "address", "name": "user", "type": "address"},
             {"internalType": "uint256", "name": "debtToCover", "type": "uint256"},
-            {"internalType": "bool", "name": "receiveAToken", "type": "bool"},
+            {"internalType": "bool", "name": "receiveAToken", "type": "bool"}
         ],
         "name": "liquidationCall",
         "outputs": [],
         "stateMutability": "nonpayable",
-        "type": "function",
+        "type": "function"
     },
     {
         "inputs": [{"internalType": "address", "name": "user", "type": "address"}],
@@ -152,11 +162,11 @@ AAVE_V3_POOL_ABI = [
             {"internalType": "uint256", "name": "availableBorrowsBase", "type": "uint256"},
             {"internalType": "uint256", "name": "currentLiquidationThreshold", "type": "uint256"},
             {"internalType": "uint256", "name": "ltv", "type": "uint256"},
-            {"internalType": "uint256", "name": "healthFactor", "type": "uint256"},
+            {"internalType": "uint256", "name": "healthFactor", "type": "uint256"}
         ],
         "stateMutability": "view",
-        "type": "function",
-    },
+        "type": "function"
+    }
 ]
 
 # Contract addresses on different networks
@@ -178,5 +188,5 @@ CONTRACT_ADDRESSES = {
         "uniswap_v3_router": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
         "sushiswap_router": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
         "aave_v3_pool": "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
-    },
+    }
 }

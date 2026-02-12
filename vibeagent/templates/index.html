@@ -6,7 +6,7 @@
     <title>VibeAgent - DeFi Strategy Generator</title>
     
     <!-- PWA Meta Tags for Android -->
-    <meta name="description" content="AI-Powered DeFi Strategy Generator for Instadapp Avocado Multi-Sig Wallet">
+    <meta name="description" content="AI-Powered DeFi Strategy Generator with WalletConnect & Avocado Wallet">
     <meta name="theme-color" content="#667eea">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -265,20 +265,171 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        
+        /* Wallet Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        /* Wallet Status */
+        .wallet-status {
+            background: #f0f9ff;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .wallet-status.connected {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+        
+        /* Execution Stats */
+        .execution-status {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        
+        .stat-box {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            color: #667eea;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            color: #856404;
+            margin: 15px 0;
+        }
+        
+        /* Validation result styles */
+        .check-item {
+            color: green;
+        }
+        
+        .error-item {
+            color: red;
+        }
+        
+        .warning-item {
+            color: orange;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 VibeAgent</h1>
-        <p class="subtitle">AI-Powered DeFi Strategy Generator for Instadapp Avocado Multi-Sig Wallet</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <h1>🚀 VibeAgent</h1>
+                <p class="subtitle">AI-Powered DeFi Strategy Generator with WalletConnect & Avocado Wallet</p>
+            </div>
+            <div>
+                <button id="walletConnectBtn" class="btn-primary" onclick="toggleWalletModal()" style="margin: 0;">
+                    <span id="walletBtnText">🔗 Connect Wallet</span>
+                </button>
+                <div id="walletStatus" class="wallet-status hidden"></div>
+            </div>
+        </div>
         
         <div id="statusMessage"></div>
+        
+        <!-- Wallet Connection Modal -->
+        <div id="walletModal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close" onclick="closeWalletModal()">&times;</span>
+                <h2>🔗 Connect Your Wallet</h2>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Connect any wallet via WalletConnect to execute autonomous arbitrage transactions
+                </p>
+                
+                <div class="form-group">
+                    <label for="walletNetwork">Select Network:</label>
+                    <select id="walletNetwork">
+                        <option value="ethereum">Ethereum Mainnet</option>
+                        <option value="polygon">Polygon</option>
+                        <option value="arbitrum">Arbitrum</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="walletAddressInput">Wallet Address:</label>
+                    <input type="text" id="walletAddressInput" placeholder="0x..." />
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        In production, this would use WalletConnect's browser modal for secure connection
+                    </small>
+                </div>
+                
+                <button onclick="connectWallet()" class="btn-primary" style="width: 100%; margin-top: 10px;">
+                    Connect Wallet
+                </button>
+                
+                <div id="walletModalStatus" style="margin-top: 15px;"></div>
+            </div>
+        </div>
         
         <!-- Configuration Section -->
         <div class="section">
             <h2>⚙️ Configuration</h2>
             <div class="form-group">
-                <label for="network">Select Network:</label>
+                <label for="network">Agent Network:</label>
                 <select id="network">
                     <option value="ethereum">Ethereum Mainnet</option>
                     <option value="polygon">Polygon</option>
@@ -286,8 +437,11 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="walletAddress">Avocado Multi-Sig Wallet Address:</label>
+                <label for="walletAddress">Avocado Multi-Sig Wallet Address (optional):</label>
                 <input type="text" id="walletAddress" placeholder="0x..." />
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    For Avocado transaction builder export. Leave empty if using WalletConnect only.
+                </small>
             </div>
             <button onclick="initializeAgent()">Initialize Agent</button>
         </div>
@@ -328,7 +482,7 @@
             <button onclick="updateConfig()" class="btn-secondary">Update Configuration</button>
             
             <!-- Scanner Status -->
-            <div id="scannerStatus" class="result-box hidden">
+            <div id="scannerStatus" class="result-box hidden" style="margin-top: 15px;">
                 <h3>Scanner Status</h3>
                 <div id="statusContent"></div>
             </div>
@@ -350,12 +504,43 @@
                 <h3>Recent Opportunities</h3>
                 <div id="opportunitiesContent"></div>
             </div>
+            
+            <!-- WalletConnect Executor Section -->
+            <div style="background: #fff; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                <h3 style="color: #667eea; margin-bottom: 10px;">⚡ WalletConnect Executor</h3>
+                <p style="color: #666; margin-bottom: 15px;">
+                    Connect your wallet to enable autonomous arbitrage execution with AI-powered strategy optimization
+                </p>
+                
+                <div id="executionStatus" class="execution-status hidden">
+                    <h3>📊 Execution Statistics</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px;">
+                        <div class="stat-box">
+                            <div class="stat-label">Successful</div>
+                            <div class="stat-value" id="statSuccess">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Failed</div>
+                            <div class="stat-value" id="statFailed">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Total Profit</div>
+                            <div class="stat-value" id="statProfit">$0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Status</div>
+                            <div class="stat-value" id="statStatus">Ready</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Strategy Selection -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('arbitrage')">Arbitrage</button>
             <button class="tab" onclick="switchTab('liquidation')">Liquidation</button>
+            <button class="tab" onclick="switchTab('execute')">Execute</button>
         </div>
         
         <!-- Arbitrage Tab -->
@@ -399,6 +584,36 @@
             </div>
         </div>
         
+        <!-- Execute Tab (WalletConnect) -->
+        <div id="execute-tab" class="tab-content">
+            <div class="section">
+                <h2>⚡ Execute with Connected Wallet</h2>
+                <p style="color: #666; margin-bottom: 15px;">
+                    Execute opportunities autonomously with your connected wallet. All transactions include safety checks.
+                </p>
+                
+                <div id="walletRequiredMsg" class="warning-box">
+                    ⚠️ Please connect your wallet using the "Connect Wallet" button above to use this feature.
+                </div>
+                
+                <div id="executeControls" class="hidden">
+                    <h3>Validation & Safety Checks</h3>
+                    <div id="validationResult" class="result-box hidden"></div>
+                    
+                    <div style="margin-top: 20px;">
+                        <button onclick="validateCurrentOpportunity()" class="btn-secondary">
+                            Validate Last Opportunity
+                        </button>
+                        <button onclick="executeCurrentOpportunity()" class="btn-primary" id="executeBtn" disabled>
+                            Execute Opportunity
+                        </button>
+                    </div>
+                    
+                    <div id="executeResult" class="result-box hidden" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Export Section -->
         <div class="section">
             <h2>📤 Export for Avocado Transaction Builder</h2>
@@ -416,20 +631,20 @@
             <h2>📚 How to Use</h2>
             <div class="grid">
                 <div class="card">
-                    <h3>1. Configure</h3>
-                    <p>Select your network and enter your Avocado multi-sig wallet address, then initialize the agent.</p>
+                    <h3>1. Connect Wallet</h3>
+                    <p>Click "Connect Wallet" to connect via WalletConnect for autonomous execution, or configure for Avocado export.</p>
                 </div>
                 <div class="card">
                     <h3>2. Scan</h3>
-                    <p>Choose arbitrage or liquidation, enter the required parameters, and scan for opportunities.</p>
+                    <p>Choose arbitrage or liquidation, enter parameters, and scan for profitable opportunities.</p>
                 </div>
                 <div class="card">
-                    <h3>3. Export</h3>
-                    <p>Export the generated strategy as a transaction batch for your Avocado wallet.</p>
+                    <h3>3. Validate</h3>
+                    <p>Check safety validations including gas balance, profit thresholds, and network compatibility.</p>
                 </div>
                 <div class="card">
                     <h3>4. Execute</h3>
-                    <p>Import the JSON file into Avocado's transaction builder and execute with your multi-sig.</p>
+                    <p>Execute with connected wallet or export to Avocado transaction builder for multi-sig execution.</p>
                 </div>
             </div>
         </div>
@@ -437,6 +652,14 @@
     
     <script>
         let currentStrategy = null;
+        let walletConnected = false;
+        let statusUpdateInterval = null;
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkWalletStatus();
+            updateExecuteControls();
+        });
         
         function showStatus(message, type = 'info') {
             const statusDiv = document.getElementById('statusMessage');
@@ -467,16 +690,12 @@
             const network = document.getElementById('network').value;
             const walletAddress = document.getElementById('walletAddress').value;
             
-            if (!walletAddress) {
-                showStatus('Please enter your Avocado wallet address', 'error');
-                return;
-            }
-            
+            // Wallet address is now optional
             try {
                 const response = await fetch('/api/initialize', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ network, wallet_address: walletAddress })
+                    body: JSON.stringify({ network, wallet_address: walletAddress || null })
                 });
                 
                 const data = await response.json();
@@ -967,6 +1186,305 @@
                 showStatus(`Error: ${error.message}`, 'error');
             }
         }
+        
+        // =====================================================================
+        // WalletConnect Integration Functions
+        // =====================================================================
+        
+        // Utility function to format wallet address
+        function formatWalletAddress(address) {
+            if (!address || address.length < 10) return address;
+            return `${address.substring(0, 6)}...${address.substring(38)}`;
+        }
+        
+        function toggleWalletModal() {
+            const modal = document.getElementById('walletModal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('show');
+            } else {
+                closeWalletModal();
+            }
+        }
+        
+        function closeWalletModal() {
+            const modal = document.getElementById('walletModal');
+            modal.classList.remove('show');
+            modal.classList.add('hidden');
+        }
+        
+        async function connectWallet() {
+            const walletAddress = document.getElementById('walletAddressInput').value;
+            const network = document.getElementById('walletNetwork').value;
+            
+            if (!walletAddress) {
+                showModalStatus('Please enter wallet address', 'error');
+                return;
+            }
+            
+            try {
+                showModalStatus('Connecting wallet...', 'info');
+                
+                const response = await fetch('/api/wallet/connect', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        wallet_address: walletAddress,
+                        network: network
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    walletConnected = true;
+                    updateWalletUI(data);
+                    closeWalletModal();
+                    showStatus(`Wallet connected: ${formatWalletAddress(walletAddress)}`, 'success');
+                    updateExecuteControls();
+                    checkExecutionStats();
+                } else {
+                    showModalStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showModalStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function disconnectWallet() {
+            try {
+                const response = await fetch('/api/wallet/disconnect', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    walletConnected = false;
+                    updateWalletUI(null);
+                    showStatus('Wallet disconnected', 'info');
+                    updateExecuteControls();
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkWalletStatus() {
+            try {
+                const response = await fetch('/api/wallet/status');
+                const data = await response.json();
+                
+                if (data.connected) {
+                    walletConnected = true;
+                    updateWalletUI(data);
+                    updateExecuteControls();
+                }
+            } catch (error) {
+                console.log('Wallet not connected');
+            }
+        }
+        
+        function updateWalletUI(walletData) {
+            const btn = document.getElementById('walletConnectBtn');
+            const btnText = document.getElementById('walletBtnText');
+            const statusDiv = document.getElementById('walletStatus');
+            const executionStatus = document.getElementById('executionStatus');
+            
+            if (walletData && walletData.wallet_address) {
+                const addr = walletData.wallet_address;
+                btnText.textContent = formatWalletAddress(addr);
+                btn.onclick = disconnectWallet;
+                
+                statusDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>
+                            <strong>${walletData.network.charAt(0).toUpperCase() + walletData.network.slice(1)}</strong> | 
+                            Balance: ${walletData.balance.toFixed(4)} ${walletData.native_token}
+                        </span>
+                        <button onclick="disconnectWallet()" style="padding: 5px 10px; font-size: 12px;">Disconnect</button>
+                    </div>
+                `;
+                statusDiv.classList.remove('hidden');
+                statusDiv.classList.add('connected');
+                
+                // Show execution status
+                if (executionStatus) {
+                    executionStatus.classList.remove('hidden');
+                }
+            } else {
+                btnText.textContent = '🔗 Connect Wallet';
+                btn.onclick = toggleWalletModal;
+                statusDiv.classList.add('hidden');
+                statusDiv.classList.remove('connected');
+                
+                // Hide execution status
+                if (executionStatus) {
+                    executionStatus.classList.add('hidden');
+                }
+            }
+        }
+        
+        function updateExecuteControls() {
+            const walletRequiredMsg = document.getElementById('walletRequiredMsg');
+            const executeControls = document.getElementById('executeControls');
+            
+            if (walletConnected) {
+                walletRequiredMsg.classList.add('hidden');
+                executeControls.classList.remove('hidden');
+            } else {
+                walletRequiredMsg.classList.remove('hidden');
+                executeControls.classList.add('hidden');
+            }
+        }
+        
+        function showModalStatus(message, type) {
+            const statusDiv = document.getElementById('walletModalStatus');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+        }
+        
+        async function validateCurrentOpportunity() {
+            if (!currentStrategy) {
+                showStatus('Please scan for an opportunity first', 'error');
+                return;
+            }
+            
+            if (!walletConnected) {
+                showStatus('Please connect your wallet first', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('Validating opportunity...', 'info');
+                
+                const response = await fetch('/api/execute/validate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ opportunity: currentStrategy })
+                });
+                
+                const data = await response.json();
+                
+                const resultDiv = document.getElementById('validationResult');
+                
+                let checksHtml = data.checks.map(c => `<li class="check-item">${c}</li>`).join('');
+                let errorsHtml = data.errors.map(e => `<li class="error-item">✗ ${e}</li>`).join('');
+                let warningsHtml = data.warnings.map(w => `<li class="warning-item">⚠ ${w}</li>`).join('');
+                
+                resultDiv.innerHTML = `
+                    <h3>Safety Validation Results</h3>
+                    <p><strong>Status:</strong> ${data.passed ? '<span class="check-item">✓ PASSED</span>' : '<span class="error-item">✗ FAILED</span>'}</p>
+                    ${checksHtml ? `<ul>${checksHtml}</ul>` : ''}
+                    ${errorsHtml ? `<h4 class="error-item">Errors:</h4><ul>${errorsHtml}</ul>` : ''}
+                    ${warningsHtml ? `<h4 class="warning-item">Warnings:</h4><ul>${warningsHtml}</ul>` : ''}
+                `;
+                resultDiv.classList.remove('hidden');
+                
+                // Enable execute button if passed
+                const executeBtn = document.getElementById('executeBtn');
+                executeBtn.disabled = !data.passed;
+                
+                showStatus(data.passed ? 'Validation passed!' : 'Validation failed', data.passed ? 'success' : 'error');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function executeCurrentOpportunity() {
+            if (!currentStrategy) {
+                showStatus('Please scan for an opportunity first', 'error');
+                return;
+            }
+            
+            if (!walletConnected) {
+                showStatus('Please connect your wallet first', 'error');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to execute this opportunity? This will create a transaction request.')) {
+                return;
+            }
+            
+            try {
+                showStatus('Executing opportunity...', 'info');
+                
+                const response = await fetch('/api/execute/arbitrage', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ opportunity: currentStrategy })
+                });
+                
+                const data = await response.json();
+                
+                const resultDiv = document.getElementById('executeResult');
+                
+                if (data.success) {
+                    if (data.simulated) {
+                        resultDiv.innerHTML = `
+                            <h3>🎭 Simulation Mode</h3>
+                            <p style="color: orange;"><strong>Note:</strong> ${data.message}</p>
+                            <p><strong>Mock TX Hash:</strong> <code>${data.tx_hash}</code></p>
+                            <p><strong>Estimated Profit:</strong> $${data.profit_usd.toFixed(2)}</p>
+                            <p><strong>Recipient:</strong> ${data.recipient}</p>
+                            <p style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px;">
+                                To enable real execution, deploy the arbitrage contract and update the executor module.
+                            </p>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <h3>Transaction Created</h3>
+                            <p><strong>Request ID:</strong> ${data.request_id}</p>
+                            <p><strong>Status:</strong> ${data.status}</p>
+                            <p style="color: blue;">${data.message}</p>
+                            <pre>${JSON.stringify(data.transaction, null, 2)}</pre>
+                        `;
+                    }
+                    resultDiv.classList.remove('hidden');
+                    showStatus('Execution initiated!', 'success');
+                    
+                    // Update stats
+                    checkExecutionStats();
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3 style="color: red;">Execution Failed</h3>
+                        <p>${data.error}</p>
+                        ${data.validation ? `<pre>${JSON.stringify(data.validation, null, 2)}</pre>` : ''}
+                    `;
+                    resultDiv.classList.remove('hidden');
+                    showStatus(`Execution failed: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkExecutionStats() {
+            if (!walletConnected) return;
+            
+            try {
+                const response = await fetch('/api/execute/stats');
+                const data = await response.json();
+                
+                document.getElementById('statSuccess').textContent = data.successful_executions || 0;
+                document.getElementById('statFailed').textContent = data.failed_executions || 0;
+                document.getElementById('statProfit').textContent = `$${(data.total_profit_usd || 0).toFixed(2)}`;
+                document.getElementById('statStatus').textContent = data.is_scanning ? 'Scanning...' : 'Ready';
+            } catch (error) {
+                console.log('Error fetching stats:', error);
+            }
+        }
+        
+        // Poll stats every 10 seconds if wallet connected
+        setInterval(() => {
+            if (walletConnected) {
+                checkExecutionStats();
+            }
+        }, 10000);
         
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
