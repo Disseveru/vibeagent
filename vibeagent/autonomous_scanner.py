@@ -6,6 +6,7 @@ import time
 import threading
 from typing import Dict, Any, List
 from datetime import datetime
+from collections import deque
 
 from .agent import VibeAgent
 from .config import AgentConfig
@@ -42,9 +43,9 @@ class AutonomousScanner:
         self.last_scan_time = None
         self.scan_count = 0
 
-        # Discovered opportunities
-        self.opportunities = []
+        # Discovered opportunities (use deque for O(1) append and automatic size limit)
         self.max_opportunities_history = 100
+        self.opportunities = deque(maxlen=self.max_opportunities_history)
 
         # Scanner statistics
         self.stats = {
@@ -138,8 +139,12 @@ class AutonomousScanner:
                     self.logger.log_opportunity_found(opportunity)
                     self.stats["opportunities_found"] += 1
 
-                    # Generate strategy
-                    opportunity = agent.generate_strategy_with_ai(opportunity)
+                    # Generate strategy (skip AI generation in autonomous mode for performance)
+                    # AI generation is expensive (5-30s per call) and blocks the scan loop
+                    # Only generate AI strategies on-demand via web interface
+                    if not self.config.autonomous_mode:
+                        opportunity = agent.generate_strategy_with_ai(opportunity)
+
                     opportunity["network"] = network
                     opportunity["discovered_at"] = datetime.now().isoformat()
 
@@ -159,15 +164,13 @@ class AutonomousScanner:
 
     def _store_opportunity(self, opportunity: Dict[str, Any]):
         """Store discovered opportunity in history"""
+        # deque with maxlen automatically removes oldest items
         self.opportunities.append(opportunity)
-
-        # Keep only recent opportunities
-        if len(self.opportunities) > self.max_opportunities_history:
-            self.opportunities = self.opportunities[-self.max_opportunities_history :]
 
     def get_opportunities(self, limit: int = 20) -> List[Dict[str, Any]]:
         """Get recent opportunities"""
-        return self.opportunities[-limit:]
+        # Convert deque to list and get last N items
+        return list(self.opportunities)[-limit:]
 
     def get_status(self) -> Dict[str, Any]:
         """Get scanner status"""
