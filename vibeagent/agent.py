@@ -246,7 +246,7 @@ class VibeAgent:
                 max_liquidatable = total_debt * 0.5  # Can liquidate up to 50% of debt
                 potential_profit = (max_liquidatable / (10**8)) * liquidation_bonus
 
-                # Estimate gas cost
+                # Estimate gas cost with dynamic gas price
                 gas_estimate = 400000
                 gas_cost_usd = self._estimate_gas_cost(gas_estimate)
                 net_profit = potential_profit - gas_cost_usd
@@ -255,6 +255,26 @@ class VibeAgent:
                 print(f"Potential profit: ${potential_profit:.2f}")
                 print(f"Gas cost: ${gas_cost_usd:.2f}")
                 print(f"Net profit: {net_profit:.2f}")
+
+                # Most common collateral/debt tokens (would ideally query from getUserConfiguration)
+                # WETH is the most common collateral on Aave
+                # USDC/USDT/DAI are the most common debt tokens
+                common_tokens = {
+                    "ethereum": {
+                        "collateral": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",  # WETH
+                        "debt": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",  # USDC
+                    },
+                    "polygon": {
+                        "collateral": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",  # WETH
+                        "debt": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",  # USDC
+                    },
+                    "arbitrum": {
+                        "collateral": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",  # WETH
+                        "debt": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",  # USDC
+                    },
+                }
+
+                network_tokens = common_tokens.get(self.network, common_tokens["ethereum"])
 
                 return {
                     "type": "liquidation",
@@ -269,10 +289,8 @@ class VibeAgent:
                     "flash_loan_required": True,
                     "gas_estimate": gas_estimate,
                     "gas_cost_usd": gas_cost_usd,
-                    # Would need to query
-                    "collateral_token": "0x0000000000000000000000000000000000000000",
-                    # Would need to query
-                    "debt_token": "0x0000000000000000000000000000000000000000",
+                    "collateral_token": network_tokens["collateral"],
+                    "debt_token": network_tokens["debt"],
                     "strategy": None,
                 }
             else:
@@ -581,21 +599,64 @@ class VibeAgent:
             return None
 
     def _estimate_gas_cost(self, gas_units: int = 500000) -> int:
-        """Estimate gas cost in USD"""
+        """Estimate gas cost in USD using real-time ETH price from DEX"""
         try:
             # Get current gas price
             gas_price = self.web3.eth.gas_price
             # Estimate ETH cost
             eth_cost = (gas_price * gas_units) / (10**18)
-            # ETH price estimation (in production, fetch from price oracle or Chainlink)
-            # This is a conservative estimate to prevent underestimating costs
-            eth_price_usd = (
-                2000  # TODO: Integrate with price oracle (Chainlink, Uniswap TWAP, etc.)
-            )
+            
+            # Get real-time ETH price from WETH/USDC pair
+            eth_price_usd = self._get_eth_price_usd()
+            
             return int(eth_cost * eth_price_usd)
         except Exception as e:
             print(f"Error estimating gas cost: {e}")
             return 50  # Default conservative estimate
+
+    def _get_eth_price_usd(self) -> float:
+        """Get real-time ETH price in USD from WETH/USDC pair on Uniswap"""
+        try:
+            # Use cached price if available and fresh
+            cache_key = "eth_price_usd"
+            if cache_key in self._price_cache:
+                cached_price, cached_time = self._price_cache[cache_key]
+                if time.time() - cached_time < self._price_cache_ttl:
+                    return cached_price
+            
+            # Token addresses for WETH and USDC on each network
+            weth_usdc_pairs = {
+                "ethereum": {
+                    "weth": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+                    "usdc": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                },
+                "polygon": {
+                    "weth": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+                    "usdc": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+                },
+                "arbitrum": {
+                    "weth": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+                    "usdc": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+                },
+            }
+            
+            pair = weth_usdc_pairs.get(self.network, weth_usdc_pairs["ethereum"])
+            
+            # Get price from Uniswap V3
+            price = self._get_dex_price(pair["weth"], pair["usdc"], "uniswap_v3")
+            
+            if price and price > 0:
+                # Cache the price
+                self._price_cache[cache_key] = (price, time.time())
+                return price
+            
+            # Fallback to conservative estimate if price fetch fails
+            print("Warning: Could not fetch ETH price, using fallback value")
+            return 2000.0  # Fallback value
+            
+        except Exception as e:
+            print(f"Error fetching ETH price: {e}")
+            return 2000.0  # Fallback value
 
     def _call_openai_for_strategy(self, opportunity: Dict[str, Any]) -> str:
         """Call OpenAI API for strategy generation with fallback"""

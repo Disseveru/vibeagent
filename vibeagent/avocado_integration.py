@@ -87,7 +87,7 @@ class AvocadoIntegration:
         actions = []
 
         for step in steps:
-            action = self._convert_step_to_action(step)
+            action = self._convert_step_to_action(step, strategy)
             if action:
                 actions.append(action)
 
@@ -103,12 +103,12 @@ class AvocadoIntegration:
             "transactions": actions,
         }
 
-    def _convert_step_to_action(self, step: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _convert_step_to_action(self, step: Dict[str, Any], strategy: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
         """Convert a strategy step into an Avocado action"""
         action_type = step.get("action")
 
         if action_type == "flash_loan":
-            return self._build_flash_loan_action(step)
+            return self._build_flash_loan_action(step, strategy)
         elif action_type == "swap":
             return self._build_swap_action(step)
         elif action_type == "liquidate":
@@ -119,7 +119,7 @@ class AvocadoIntegration:
 
         return None
 
-    def _build_flash_loan_action(self, step: Dict[str, Any]) -> Dict[str, Any]:
+    def _build_flash_loan_action(self, step: Dict[str, Any], strategy: Dict[str, Any] = None) -> Dict[str, Any]:
         """Build flash loan action for Avocado"""
         protocol = step.get("protocol", "aave_v3")
         token = step.get("token")
@@ -128,8 +128,8 @@ class AvocadoIntegration:
         # Get protocol address
         pool_address = self.PROTOCOL_ADDRESSES[self.network].get(f"{protocol}_pool")
 
-        # Encode flash loan call
-        encoded_data = self._encode_flash_loan_call(token, amount)
+        # Encode flash loan call with strategy context for amount calculation
+        encoded_data = self._encode_flash_loan_call(token, amount, strategy)
 
         return {
             "to": pool_address,
@@ -145,12 +145,13 @@ class AvocadoIntegration:
         dex = step.get("dex", "uniswap_v3")
         from_token = step.get("from")
         to_token = step.get("to")
+        amount = step.get("amount")  # Get amount from step if provided
 
         # Get DEX router address
         router_address = self.PROTOCOL_ADDRESSES[self.network].get(f"{dex}_router")
 
-        # Encode swap call
-        encoded_data = self._encode_swap_call(dex, from_token, to_token)
+        # Encode swap call with amount if available
+        encoded_data = self._encode_swap_call(dex, from_token, to_token, amount)
 
         return {
             "to": router_address,
@@ -158,7 +159,7 @@ class AvocadoIntegration:
             "data": encoded_data,
             "operation": 0,
             "description": f"Swap on {dex}",
-            "meta": {"dex": dex, "fromToken": from_token, "toToken": to_token},
+            "meta": {"dex": dex, "fromToken": from_token, "toToken": to_token, "amount": amount},
         }
 
     def _build_liquidation_action(self, step: Dict[str, Any]) -> Dict[str, Any]:
@@ -318,13 +319,14 @@ class AvocadoIntegration:
 
         return warnings
 
-    def _encode_flash_loan_call(self, token: str, amount: str) -> str:
+    def _encode_flash_loan_call(self, token: str, amount: str, opportunity: Optional[Dict[str, Any]] = None) -> str:
         """
         Encode Aave V3 flash loan call
 
         Args:
             token: Token address to borrow
             amount: Amount to borrow (can be string like "10" or "auto")
+            opportunity: Optional opportunity dict to calculate amount from
 
         Returns:
             Encoded calldata as hex string
@@ -332,9 +334,28 @@ class AvocadoIntegration:
         try:
             token = Web3.to_checksum_address(token)
 
-            # For "auto" or string amounts, use a placeholder (would be calculated dynamically)
-            if amount == "auto" or not amount.isdigit():
-                amount_wei = 10 * (10**18)  # Default 10 ETH equivalent
+            # Calculate amount based on opportunity details or use provided amount
+            if amount == "auto":
+                # Try to calculate from opportunity details
+                if opportunity:
+                    # For liquidations, use max_liquidatable_usd
+                    if opportunity.get("type") == "liquidation":
+                        max_liquidatable_usd = opportunity.get("max_liquidatable_usd", 0)
+                        # Convert USD to token amount (simplified - assumes 1:1 for stablecoins)
+                        # In production, would query token price
+                        amount_wei = int(max_liquidatable_usd * (10**18))
+                    # For arbitrage, use a reasonable amount based on estimated profit
+                    elif opportunity.get("type") == "arbitrage":
+                        # Use 10x the estimated profit as loan amount
+                        estimated_profit = opportunity.get("estimated_profit_usd", 0)
+                        amount_wei = int(max(10 * estimated_profit, 1) * (10**18))
+                    else:
+                        amount_wei = 1 * (10**18)  # Default 1 token
+                else:
+                    amount_wei = 1 * (10**18)  # Default 1 token when no opportunity data
+            elif not amount.isdigit():
+                # If amount is not "auto" but also not a number, use default
+                amount_wei = 1 * (10**18)
             else:
                 amount_wei = int(float(amount) * (10**18))
 
@@ -362,7 +383,7 @@ class AvocadoIntegration:
             print(f"Error encoding flash loan: {e}")
             return "0x"
 
-    def _encode_swap_call(self, dex: str, from_token: str, to_token: str) -> str:
+    def _encode_swap_call(self, dex: str, from_token: str, to_token: str, amount: Optional[int] = None) -> str:
         """
         Encode DEX swap call
 
@@ -370,6 +391,7 @@ class AvocadoIntegration:
             dex: DEX name (uniswap_v3, sushiswap)
             from_token: Input token address
             to_token: Output token address
+            amount: Amount to swap in wei (if None, uses 1 token as placeholder)
 
         Returns:
             Encoded calldata as hex string
@@ -377,6 +399,10 @@ class AvocadoIntegration:
         try:
             from_token = Web3.to_checksum_address(from_token)
             to_token = Web3.to_checksum_address(to_token)
+            
+            # Use provided amount or default to 1 token (10**18 wei)
+            # In production, this should always be calculated from strategy details
+            amount_in = amount if amount is not None else 10**18
 
             if dex == "uniswap_v3":
                 # Get router address
@@ -385,7 +411,6 @@ class AvocadoIntegration:
                 # Encode Uniswap V3 exactInputSingle
                 router = self.web3.eth.contract(address=router_address, abi=UNISWAP_V3_ROUTER_ABI)
 
-                # Placeholder values - would be calculated from actual balances
                 encoded = router.functions.exactInputSingle(
                     (
                         from_token,  # tokenIn
@@ -393,7 +418,7 @@ class AvocadoIntegration:
                         3000,  # fee (0.3%)
                         self.wallet_address,  # recipient
                         int(datetime.now().timestamp()) + 300,  # deadline (5 min)
-                        10**18,  # amountIn (placeholder)
+                        amount_in,  # amountIn
                         0,  # amountOutMinimum (would calculate with slippage)
                         0,  # sqrtPriceLimitX96
                     )
@@ -408,7 +433,7 @@ class AvocadoIntegration:
                 router = self.web3.eth.contract(address=router_address, abi=SUSHISWAP_ROUTER_ABI)
 
                 encoded = router.functions.swapExactTokensForTokens(
-                    10**18,  # amountIn (placeholder)
+                    amount_in,  # amountIn
                     0,  # amountOutMin (would calculate with slippage)
                     [from_token, to_token],  # path
                     self.wallet_address,  # to
