@@ -409,8 +409,18 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 VibeAgent</h1>
-        <p class="subtitle">AI-Powered DeFi Strategy Generator for Instadapp Avocado Multi-Sig Wallet</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <h1>🚀 VibeAgent</h1>
+                <p class="subtitle">AI-Powered DeFi Strategy Generator with WalletConnect</p>
+            </div>
+            <div>
+                <button id="walletConnectBtn" class="btn-primary" onclick="toggleWalletModal()" style="margin: 0;">
+                    <span id="walletBtnText">🔗 Connect Wallet</span>
+                </button>
+                <div id="walletStatus" class="wallet-status hidden"></div>
+            </div>
+        </div>
         
         <div id="statusMessage"></div>
         
@@ -524,6 +534,7 @@
         <div class="tabs">
             <button class="tab active" onclick="switchTab('arbitrage')">Arbitrage</button>
             <button class="tab" onclick="switchTab('liquidation')">Liquidation</button>
+            <button class="tab" onclick="switchTab('execute')">Execute</button>
         </div>
         
         <!-- Arbitrage Tab -->
@@ -567,6 +578,36 @@
             </div>
         </div>
         
+        <!-- Execute Tab (New) -->
+        <div id="execute-tab" class="tab-content">
+            <div class="section">
+                <h2>⚡ Execute with Connected Wallet</h2>
+                <p style="color: #666; margin-bottom: 15px;">
+                    Execute opportunities autonomously with your connected wallet. All transactions include safety checks.
+                </p>
+                
+                <div id="walletRequiredMsg" class="warning-box">
+                    ⚠️ Please connect your wallet using the "Connect Wallet" button above to use this feature.
+                </div>
+                
+                <div id="executeControls" class="hidden">
+                    <h3>Validation & Safety Checks</h3>
+                    <div id="validationResult" class="result-box hidden"></div>
+                    
+                    <div style="margin-top: 20px;">
+                        <button onclick="validateCurrentOpportunity()" class="btn-secondary">
+                            Validate Last Opportunity
+                        </button>
+                        <button onclick="executeCurrentOpportunity()" class="btn-primary" id="executeBtn" disabled>
+                            Execute Opportunity
+                        </button>
+                    </div>
+                    
+                    <div id="executeResult" class="result-box hidden" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Export Section -->
         <div class="section">
             <h2>📤 Export for Avocado Transaction Builder</h2>
@@ -584,20 +625,20 @@
             <h2>📚 How to Use</h2>
             <div class="grid">
                 <div class="card">
-                    <h3>1. Configure</h3>
-                    <p>Select your network and enter your Avocado multi-sig wallet address, then initialize the agent.</p>
+                    <h3>1. Connect Wallet</h3>
+                    <p>Click "Connect Wallet" to connect via WalletConnect for autonomous execution, or configure for Avocado export.</p>
                 </div>
                 <div class="card">
                     <h3>2. Scan</h3>
-                    <p>Choose arbitrage or liquidation, enter the required parameters, and scan for opportunities.</p>
+                    <p>Choose arbitrage or liquidation, enter parameters, and scan for profitable opportunities.</p>
                 </div>
                 <div class="card">
-                    <h3>3. Export</h3>
-                    <p>Export the generated strategy as a transaction batch for your Avocado wallet.</p>
+                    <h3>3. Validate</h3>
+                    <p>Check safety validations including gas balance, profit thresholds, and network compatibility.</p>
                 </div>
                 <div class="card">
                     <h3>4. Execute</h3>
-                    <p>Import the JSON file into Avocado's transaction builder and execute with your multi-sig.</p>
+                    <p>Execute with connected wallet or export to Avocado transaction builder for multi-sig execution.</p>
                 </div>
             </div>
         </div>
@@ -605,6 +646,13 @@
     
     <script>
         let currentStrategy = null;
+        let walletConnected = false;
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkWalletStatus();
+            updateExecuteControls();
+        });
         
         function showStatus(message, type = 'info') {
             const statusDiv = document.getElementById('statusMessage');
@@ -661,7 +709,7 @@
                 const response = await fetch('/api/initialize', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ network, wallet_address: walletAddress })
+                    body: JSON.stringify({ network, wallet_address: walletAddress || null })
                 });
                 
                 const data = await response.json();

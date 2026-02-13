@@ -1,8 +1,8 @@
 # 🚀 VibeAgent
 
-**AI-Powered DeFi Strategy Generator for Instadapp Avocado Multi-Sig Wallet**
+**AI-Powered DeFi Strategy Generator with WalletConnect Integration**
 
-VibeAgent is an intelligent coding assistant that helps you create and execute sophisticated DeFi strategies including flashloan arbitrage and liquidations - all without writing a single line of code!
+VibeAgent is an intelligent coding assistant that helps you create and execute sophisticated DeFi strategies including flashloan arbitrage and liquidations - all without writing a single line of code! Now with **WalletConnect (Reown)** support for autonomous execution directly from any wallet.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Disseveru/vibeagent)
 
@@ -20,6 +20,7 @@ VibeAgent is an intelligent coding assistant that helps you create and execute s
 - ⚡ **CLI Support**: Command-line interface for quick operations
 - 🔗 **Multi-Chain**: Supports Ethereum, Polygon, and Arbitrum
 - 📱 **Android PWA Support**: Install as a native-like app on Android devices
+- 📊 **Real-Time Stats**: Track execution performance and profits
 
 ## 💳 Wallet Integration (NEW!)
 
@@ -52,9 +53,30 @@ See the [Autonomous Agent Documentation](docs/AUTONOMOUS_AGENT.md) for detailed 
 ## 🎯 Perfect For
 
 - Non-technical users who want to profit from DeFi opportunities
+- Traders looking for autonomous arbitrage execution
+- Users with any WalletConnect-compatible wallet
 - Users with Instadapp Avocado multi-sig wallets
 - Anyone interested in flashloan arbitrage and liquidations
 - DeFi enthusiasts who don't know how to code
+
+## 🔗 NEW: WalletConnect Integration
+
+VibeAgent now supports **autonomous execution** with any WalletConnect-compatible wallet!
+
+**Key Benefits:**
+- 🔐 **Secure Connection**: Connect any wallet via WalletConnect (Reown)
+- ⚡ **Autonomous Execution**: Execute arbitrage opportunities automatically
+- 🛡️ **Safety Checks**: Gas balance, profit threshold, and network validation
+- 💰 **Direct Profits**: Profits sent directly to your connected wallet
+- 📊 **Real-Time Monitoring**: Track executions and performance
+
+**Quick Start:**
+1. Click "Connect Wallet" in the web interface
+2. Scan for arbitrage opportunities
+3. Validate safety checks
+4. Execute with one click!
+
+👉 **[Read the WalletConnect Guide](docs/WALLETCONNECT_GUIDE.md)** for detailed instructions
 
 ## 🚀 Quick Start
 
@@ -79,7 +101,7 @@ cp .env.example .env
 
 ### Usage Options
 
-#### Option 1: Web Interface (Recommended for Non-Coders)
+#### Option 1: Web Interface with WalletConnect (Recommended)
 
 Start the web interface:
 ```bash
@@ -88,7 +110,16 @@ python -m vibeagent.cli web
 
 Then open your browser at `http://localhost:5000`
 
-**Steps:**
+**For Autonomous Execution:**
+1. Click "Connect Wallet" and connect your wallet
+2. Initialize the AI agent
+3. Navigate to Arbitrage or Liquidation tab
+4. Enter token addresses or protocol details
+5. Click "Scan" to find opportunities
+6. Go to Execute tab and validate safety checks
+7. Click "Execute" to run autonomously with your wallet
+
+**For Avocado Transaction Builder Export:**
 1. Enter your Avocado wallet address and select network
 2. Click "Initialize Agent"
 3. Choose Arbitrage or Liquidation tab

@@ -19,9 +19,11 @@ from vibeagent import __version__
 app = Flask(__name__)
 CORS(app)
 
-# Global agent instance
+# Global instances
 agent = None
 avocado = None
+wallet_connector = None
+autonomous_executor = None
 
 # Global autonomous scanner
 config = AgentConfig()
