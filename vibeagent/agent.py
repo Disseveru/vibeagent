@@ -3,6 +3,7 @@ Core AI Agent for DeFi Strategy Generation
 """
 
 import os
+import time
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from web3 import Web3
@@ -27,18 +28,21 @@ class VibeAgent:
     - Transaction building for Avocado multi-sig wallet
     """
 
-    def __init__(self, network: str = "ethereum"):
+    def __init__(self, network: str = "ethereum", price_cache_ttl: int = 30):
         """
         Initialize the VibeAgent
 
         Args:
             network: Blockchain network (ethereum, polygon, arbitrum)
+            price_cache_ttl: Time-to-live for price cache in seconds (default: 30)
         """
         self.network = network
         self.web3 = self._initialize_web3(network)
         self.openai_client = self._initialize_openai()
         self.strategies = []
         self._token_cache = {}  # Cache for token decimals and symbols
+        self._price_cache = {}  # Cache for DEX prices with TTL
+        self._price_cache_ttl = price_cache_ttl
 
     def _initialize_web3(self, network: str) -> Web3:
         """Initialize Web3 connection based on network"""
@@ -482,7 +486,7 @@ class VibeAgent:
 
     def _get_dex_price(self, token_a: str, token_b: str, dex: str) -> Optional[float]:
         """
-        Get price quote from a DEX
+        Get price quote from a DEX with caching for performance
 
         Args:
             token_a: Input token address
@@ -496,24 +500,39 @@ class VibeAgent:
             token_a = Web3.to_checksum_address(token_a)
             token_b = Web3.to_checksum_address(token_b)
 
-            # Get token decimals
+            # Check price cache first
+            cache_key = f"{dex}_{token_a}_{token_b}"
+            if cache_key in self._price_cache:
+                cached_price, cached_time = self._price_cache[cache_key]
+                # Check if cache is still valid (within TTL)
+                if time.time() - cached_time < self._price_cache_ttl:
+                    return cached_price
+
+            # Get token decimals (these are already cached)
             decimals_a = self._get_token_decimals(token_a)
             decimals_b = self._get_token_decimals(token_b)
 
             # Use 1 token as test amount
             amount_in = 10**decimals_a
 
+            price = None
             if dex == "uniswap_v3":
-                return self._get_uniswap_v3_price(
+                price = self._get_uniswap_v3_price(
                     token_a, token_b, amount_in, decimals_a, decimals_b
                 )
             elif dex == "sushiswap":
-                return self._get_sushiswap_price(
+                price = self._get_sushiswap_price(
                     token_a, token_b, amount_in, decimals_a, decimals_b
                 )
             else:
                 print(f"Unknown DEX: {dex}")
                 return None
+
+            # Cache the price if successfully fetched
+            if price is not None:
+                self._price_cache[cache_key] = (price, time.time())
+
+            return price
 
         except Exception as e:
             print(f"Error getting price from {dex}: {e}")
