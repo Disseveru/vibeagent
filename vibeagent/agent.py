@@ -19,6 +19,28 @@ from .contract_abis import (
 
 load_dotenv()
 
+# Common token addresses across networks
+COMMON_TOKENS = {
+    "ethereum": {
+        "weth": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        "usdc": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "usdt": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "dai": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+    },
+    "polygon": {
+        "weth": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+        "usdc": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "usdt": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+        "dai": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+    },
+    "arbitrum": {
+        "weth": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        "usdc": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+        "usdt": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "dai": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+    },
+}
+
 
 class VibeAgent:
     """
@@ -119,16 +141,17 @@ class VibeAgent:
         price_diff_pct = ((max_price - min_price) / min_price) * 100
         print(f"Price difference: {price_diff_pct:.2f}%")
 
-        # Estimate profit with 10 ETH flash loan (example)
-        flash_loan_amount = 10  # ETH
+        # Estimate profit with example flash loan amount
+        # Note: In production, this would be optimized based on liquidity depth
+        flash_loan_amount = 10  # ETH (example amount for estimation)
 
         # Rough profit calculation (simplified)
         # Buy token_b at min_price, sell at max_price
         profit_per_token = max_price - min_price
         estimated_profit = flash_loan_amount * profit_per_token
 
-        # Estimate gas cost
-        gas_estimate = 500000  # Complex arbitrage with flash loan
+        # Estimate gas cost (complex arbitrage with flash loan and swaps)
+        gas_estimate = 500000  # Gas units for multi-step arbitrage
         gas_cost_usd = self._estimate_gas_cost(gas_estimate)
 
         # Calculate net profit
@@ -241,13 +264,16 @@ class VibeAgent:
             # Can liquidate if health factor < 1.0
             if health_factor_float < 1.0:
                 # Calculate potential profit (simplified)
-                # Liquidation bonus is typically 5-10%
-                liquidation_bonus = 0.05  # 5%
+                # Note: Liquidation bonus varies by protocol and asset (typically 5-10%)
+                # In production, query from protocol's liquidation configuration
+                liquidation_bonus = 0.05  # 5% (conservative estimate)
+                # Note: Max liquidation percentage varies by protocol (Aave V3 uses close factor)
+                # This 50% is a common default but should be queried from protocol
                 max_liquidatable = total_debt * 0.5  # Can liquidate up to 50% of debt
                 potential_profit = (max_liquidatable / (10**8)) * liquidation_bonus
 
-                # Estimate gas cost
-                gas_estimate = 400000
+                # Estimate gas cost for liquidation transaction
+                gas_estimate = 400000  # Gas units for liquidation call
                 gas_cost_usd = self._estimate_gas_cost(gas_estimate)
                 net_profit = potential_profit - gas_cost_usd
 
@@ -255,6 +281,10 @@ class VibeAgent:
                 print(f"Potential profit: ${potential_profit:.2f}")
                 print(f"Gas cost: ${gas_cost_usd:.2f}")
                 print(f"Net profit: {net_profit:.2f}")
+
+                # Most common collateral/debt tokens (would ideally query from getUserConfiguration)
+                # Using COMMON_TOKENS constant for consistency across the module
+                network_tokens = COMMON_TOKENS.get(self.network, COMMON_TOKENS["ethereum"])
 
                 return {
                     "type": "liquidation",
@@ -269,10 +299,8 @@ class VibeAgent:
                     "flash_loan_required": True,
                     "gas_estimate": gas_estimate,
                     "gas_cost_usd": gas_cost_usd,
-                    # Would need to query
-                    "collateral_token": "0x0000000000000000000000000000000000000000",
-                    # Would need to query
-                    "debt_token": "0x0000000000000000000000000000000000000000",
+                    "collateral_token": network_tokens["weth"],  # WETH is most common collateral
+                    "debt_token": network_tokens["usdc"],  # USDC is most common debt token
                     "strategy": None,
                 }
             else:
@@ -541,20 +569,30 @@ class VibeAgent:
     def _get_uniswap_v3_price(
         self, token_a: str, token_b: str, amount_in: int, decimals_a: int, decimals_b: int
     ) -> Optional[float]:
-        """Get price from Uniswap V3 Quoter"""
+        """Get price from Uniswap V3 Quoter (tries multiple fee tiers)"""
         try:
             quoter_address = CONTRACT_ADDRESSES[self.network]["uniswap_v3_quoter"]
             quoter = self.web3.eth.contract(address=quoter_address, abi=UNISWAP_V3_QUOTER_ABI)
 
-            # Try 0.3% fee tier (most common)
-            fee = 3000
-            amount_out = quoter.functions.quoteExactInputSingle(
-                token_a, token_b, fee, amount_in, 0
-            ).call()
+            # Try multiple fee tiers in order of liquidity (0.3%, 0.05%, 1%)
+            fee_tiers = [3000, 500, 10000]
 
-            # Convert to float price
-            price = (amount_out / (10**decimals_b)) / (amount_in / (10**decimals_a))
-            return price
+            for fee in fee_tiers:
+                try:
+                    amount_out = quoter.functions.quoteExactInputSingle(
+                        token_a, token_b, fee, amount_in, 0
+                    ).call()
+
+                    # Convert to float price
+                    price = (amount_out / (10**decimals_b)) / (amount_in / (10**decimals_a))
+                    return price
+
+                except Exception as fee_error:
+                    # This fee tier might not exist for this pair, try next one
+                    continue
+
+            print(f"No valid Uniswap V3 pool found for pair {token_a}/{token_b}")
+            return None
 
         except Exception as e:
             print(f"Error querying Uniswap V3: {e}")
@@ -581,21 +619,49 @@ class VibeAgent:
             return None
 
     def _estimate_gas_cost(self, gas_units: int = 500000) -> int:
-        """Estimate gas cost in USD"""
+        """Estimate gas cost in USD using real-time ETH price from DEX"""
         try:
             # Get current gas price
             gas_price = self.web3.eth.gas_price
             # Estimate ETH cost
             eth_cost = (gas_price * gas_units) / (10**18)
-            # ETH price estimation (in production, fetch from price oracle or Chainlink)
-            # This is a conservative estimate to prevent underestimating costs
-            eth_price_usd = (
-                2000  # TODO: Integrate with price oracle (Chainlink, Uniswap TWAP, etc.)
-            )
+
+            # Get real-time ETH price from WETH/USDC pair
+            eth_price_usd = self._get_eth_price_usd()
+
             return int(eth_cost * eth_price_usd)
         except Exception as e:
             print(f"Error estimating gas cost: {e}")
             return 50  # Default conservative estimate
+
+    def _get_eth_price_usd(self) -> float:
+        """Get real-time ETH price in USD from WETH/USDC pair on Uniswap"""
+        try:
+            # Use cached price if available and fresh
+            cache_key = "eth_price_usd"
+            if cache_key in self._price_cache:
+                cached_price, cached_time = self._price_cache[cache_key]
+                if time.time() - cached_time < self._price_cache_ttl:
+                    return cached_price
+
+            # Use COMMON_TOKENS constant for token addresses
+            pair = COMMON_TOKENS.get(self.network, COMMON_TOKENS["ethereum"])
+
+            # Get price from Uniswap V3
+            price = self._get_dex_price(pair["weth"], pair["usdc"], "uniswap_v3")
+
+            if price and price > 0:
+                # Cache the price
+                self._price_cache[cache_key] = (price, time.time())
+                return price
+
+            # Fallback to conservative estimate if price fetch fails
+            print("Warning: Could not fetch ETH price, using fallback value")
+            return 2000.0  # Fallback value
+
+        except Exception as e:
+            print(f"Error fetching ETH price: {e}")
+            return 2000.0  # Fallback value
 
     def _call_openai_for_strategy(self, opportunity: Dict[str, Any]) -> str:
         """Call OpenAI API for strategy generation with fallback"""
