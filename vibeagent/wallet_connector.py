@@ -6,7 +6,6 @@ import os
 from typing import Dict, List, Optional, Any, Callable
 from web3 import Web3
 from eth_account.signers.local import LocalAccount
-import json
 import time
 from datetime import datetime
 from dotenv import load_dotenv
