@@ -70,7 +70,7 @@ class AvocadoIntegration:
             network: Network to operate on
         """
         # Validate wallet address - skip if empty or placeholder
-        if not wallet_address or wallet_address in ["", "0x...", "0x"]:
+        if not wallet_address or wallet_address in ["0x...", "0x"]:
             raise ValueError("Valid Avocado wallet address required for integration")
 
         self.wallet_address = Web3.to_checksum_address(wallet_address)

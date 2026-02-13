@@ -24,7 +24,7 @@ class ExecutionEngine:
 
         # Initialize Avocado integration only if valid wallet address is configured
         wallet_addr = config.avocado_wallet_address
-        if wallet_addr and wallet_addr not in ["", "0x...", "0x"]:
+        if wallet_addr and wallet_addr not in ["0x...", "0x"]:
             try:
                 self.avocado = AvocadoIntegration(wallet_address=wallet_addr, network=network)
             except ValueError as e:
