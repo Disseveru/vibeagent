@@ -69,6 +69,10 @@ class AvocadoIntegration:
             wallet_address: Avocado multi-sig wallet address
             network: Network to operate on
         """
+        # Validate wallet address - skip if empty or placeholder
+        if not wallet_address or wallet_address in ["", "0x...", "0x"]:
+            raise ValueError("Valid Avocado wallet address required for integration")
+
         self.wallet_address = Web3.to_checksum_address(wallet_address)
         self.network = network
         self.web3 = Web3()  # Utility instance for encoding
