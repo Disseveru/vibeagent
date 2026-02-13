@@ -160,28 +160,27 @@ if opportunity.get("profitable", False):
 ```python
 def __init__(self, config: AgentConfig, logger: VibeLogger, network: str = "ethereum"):
     self.pending_approvals = {}
-    self._pending_ids = []  # Maintain list of pending IDs for O(1) filtering
+    self._pending_ids = set()  # Use set for O(1) add/remove operations
 
 def submit_for_approval(self, opportunity: Dict[str, Any]) -> str:
     approval_id = f"approval_{int(time.time())}_{len(self.pending_approvals)}"
     self.pending_approvals[approval_id] = {...}
-    self._pending_ids.append(approval_id)
+    self._pending_ids.add(approval_id)
 
 def approve_transaction(self, approval_id: str) -> bool:
-    # Remove from pending list
-    if approval_id in self._pending_ids:
-        self._pending_ids.remove(approval_id)
+    # Remove from pending set (O(1) operation)
+    self._pending_ids.discard(approval_id)
 
 def get_pending_approvals(self) -> list:
     return [
         {"approval_id": approval_id, **self.pending_approvals[approval_id]}
         for approval_id in self._pending_ids
-        if approval_id in self.pending_approvals
     ]
 ```
 
 **Benefits:**
 - Faster pending approvals retrieval
+- True O(1) add/remove operations with set
 - Better UI responsiveness
 - Scales with number of pending items, not total approval history
 
