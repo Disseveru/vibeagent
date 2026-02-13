@@ -19,6 +19,28 @@ from .contract_abis import (
 
 load_dotenv()
 
+# Common token addresses across networks
+COMMON_TOKENS = {
+    "ethereum": {
+        "weth": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        "usdc": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "usdt": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "dai": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+    },
+    "polygon": {
+        "weth": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+        "usdc": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "usdt": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+        "dai": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+    },
+    "arbitrum": {
+        "weth": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        "usdc": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+        "usdt": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+        "dai": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+    },
+}
+
 
 class VibeAgent:
     """
@@ -245,6 +267,8 @@ class VibeAgent:
                 # Note: Liquidation bonus varies by protocol and asset (typically 5-10%)
                 # In production, query from protocol's liquidation configuration
                 liquidation_bonus = 0.05  # 5% (conservative estimate)
+                # Note: Max liquidation percentage varies by protocol (Aave V3 uses close factor)
+                # This 50% is a common default but should be queried from protocol
                 max_liquidatable = total_debt * 0.5  # Can liquidate up to 50% of debt
                 potential_profit = (max_liquidatable / (10**8)) * liquidation_bonus
 
@@ -259,24 +283,8 @@ class VibeAgent:
                 print(f"Net profit: {net_profit:.2f}")
 
                 # Most common collateral/debt tokens (would ideally query from getUserConfiguration)
-                # WETH is the most common collateral on Aave
-                # USDC/USDT/DAI are the most common debt tokens
-                common_tokens = {
-                    "ethereum": {
-                        "collateral": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",  # WETH
-                        "debt": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",  # USDC
-                    },
-                    "polygon": {
-                        "collateral": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",  # WETH
-                        "debt": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",  # USDC
-                    },
-                    "arbitrum": {
-                        "collateral": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",  # WETH
-                        "debt": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",  # USDC
-                    },
-                }
-
-                network_tokens = common_tokens.get(self.network, common_tokens["ethereum"])
+                # Using COMMON_TOKENS constant for consistency across the module
+                network_tokens = COMMON_TOKENS.get(self.network, COMMON_TOKENS["ethereum"])
 
                 return {
                     "type": "liquidation",
@@ -291,8 +299,8 @@ class VibeAgent:
                     "flash_loan_required": True,
                     "gas_estimate": gas_estimate,
                     "gas_cost_usd": gas_cost_usd,
-                    "collateral_token": network_tokens["collateral"],
-                    "debt_token": network_tokens["debt"],
+                    "collateral_token": network_tokens["weth"],  # WETH is most common collateral
+                    "debt_token": network_tokens["usdc"],  # USDC is most common debt token
                     "strategy": None,
                 }
             else:
@@ -583,7 +591,7 @@ class VibeAgent:
                     # This fee tier might not exist for this pair, try next one
                     continue
 
-            print(f"No valid Uniswap V3 pool found for pair")
+            print(f"No valid Uniswap V3 pool found for pair {token_a}/{token_b}")
             return None
 
         except Exception as e:
@@ -636,23 +644,8 @@ class VibeAgent:
                 if time.time() - cached_time < self._price_cache_ttl:
                     return cached_price
 
-            # Token addresses for WETH and USDC on each network
-            weth_usdc_pairs = {
-                "ethereum": {
-                    "weth": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-                    "usdc": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-                },
-                "polygon": {
-                    "weth": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
-                    "usdc": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-                },
-                "arbitrum": {
-                    "weth": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
-                    "usdc": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
-                },
-            }
-
-            pair = weth_usdc_pairs.get(self.network, weth_usdc_pairs["ethereum"])
+            # Use COMMON_TOKENS constant for token addresses
+            pair = COMMON_TOKENS.get(self.network, COMMON_TOKENS["ethereum"])
 
             # Get price from Uniswap V3
             price = self._get_dex_price(pair["weth"], pair["usdc"], "uniswap_v3")

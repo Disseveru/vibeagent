@@ -347,12 +347,15 @@ class AvocadoIntegration:
                     # For liquidations, use max_liquidatable_usd
                     if opportunity.get("type") == "liquidation":
                         max_liquidatable_usd = opportunity.get("max_liquidatable_usd", 0)
-                        # Convert USD to token amount (simplified - assumes 1:1 for stablecoins)
-                        # In production, would query token price
+                        # NOTE: Simplified calculation assumes borrowing stablecoin (1:1 USD)
+                        # For production: query actual debt_token price to convert USD to token amount
+                        # e.g., if debt is WETH at $2500, borrow (max_liquidatable_usd / 2500) ETH
                         amount_wei = int(max_liquidatable_usd * (10**18))
                     # For arbitrage, use a reasonable amount based on estimated profit
                     elif opportunity.get("type") == "arbitrage":
-                        # Use 10x the estimated profit as loan amount
+                        # NOTE: Conservative estimate for flash loan size
+                        # For production: analyze liquidity depth and optimize loan amount
+                        # This uses 10x profit as a heuristic (assumes ~10% ROI)
                         estimated_profit = opportunity.get("estimated_profit_usd", 0)
                         amount_wei = int(max(10 * estimated_profit, 1) * (10**18))
                     else:
