@@ -4,69 +4,74 @@ Test WalletConnect Integration
 import os
 import sys
 
-# Set mock environment variables for testing
-os.environ['ETHEREUM_RPC_URL'] = 'https://eth.llamarpc.com'
-os.environ['POLYGON_RPC_URL'] = 'https://polygon-rpc.com'
-os.environ['ARBITRUM_RPC_URL'] = 'https://arbitrum.llamarpc.com'
-os.environ['MIN_PROFIT_USD'] = '50'
-os.environ['MAX_GAS_PRICE_GWEI'] = '100'
+def run_walletconnect_integration_tests() -> None:
+    # Set mock environment variables for testing
+    os.environ['ETHEREUM_RPC_URL'] = 'https://eth.llamarpc.com'
+    os.environ['POLYGON_RPC_URL'] = 'https://polygon-rpc.com'
+    os.environ['ARBITRUM_RPC_URL'] = 'https://arbitrum.llamarpc.com'
+    os.environ['MIN_PROFIT_USD'] = '50'
+    os.environ['MAX_GAS_PRICE_GWEI'] = '100'
 
-print("="*60)
-print("Testing WalletConnect Integration")
-print("="*60)
+    print("=" * 60)
+    print("Testing WalletConnect Integration")
+    print("=" * 60)
 
-# Test 1: Import modules
-print("\n[Test 1] Importing modules...")
-try:
-    from vibeagent.wallet_connector import WalletConnector
-    from vibeagent.autonomous_executor import AutonomousExecutor
-    from vibeagent.agent import VibeAgent
-    print("✓ All modules imported successfully")
-except Exception as e:
-    print(f"✗ Import error: {e}")
-    sys.exit(1)
+    # Test 1: Import modules
+    print("\n[Test 1] Importing modules...")
+    try:
+        from vibeagent.wallet_connector import WalletConnector
+        from vibeagent.autonomous_executor import AutonomousExecutor
+        from vibeagent.agent import VibeAgent
+        print("✓ All modules imported successfully")
+    except Exception as e:
+        print(f"✗ Import error: {e}")
+        sys.exit(1)
 
-# Test 2: Initialize WalletConnector
-print("\n[Test 2] Initializing WalletConnector...")
-try:
-    wallet = WalletConnector(network="ethereum")
-    print(f"✓ WalletConnector initialized")
-    print(f"  Network: {wallet.network}")
-    print(f"  Chain ID: {wallet.chain_id}")
-    print(f"  Connected: {wallet.connected}")
-except Exception as e:
-    print(f"✗ WalletConnector initialization error: {e}")
-    sys.exit(1)
+    # Test 2: Initialize WalletConnector
+    print("\n[Test 2] Initializing WalletConnector...")
+    try:
+        wallet = WalletConnector(network="ethereum")
+        print(f"✓ WalletConnector initialized")
+        print(f"  Network: {wallet.network}")
+        print(f"  Chain ID: {wallet.chain_id}")
+        print(f"  Connected: {wallet.connected}")
+    except Exception as e:
+        print(f"✗ WalletConnector initialization error: {e}")
+        sys.exit(1)
 
-# Test 3: Get supported networks
-print("\n[Test 3] Getting supported networks...")
-try:
-    networks = wallet.get_supported_networks()
-    print(f"✓ Found {len(networks)} supported networks:")
-    for net in networks:
-        print(f"  - {net['name']} (Chain ID: {net['chain_id']}, Token: {net['native_token']})")
-except Exception as e:
-    print(f"✗ Error getting networks: {e}")
+    # Test 3: Get supported networks
+    print("\n[Test 3] Getting supported networks...")
+    try:
+        networks = wallet.get_supported_networks()
+        print(f"✓ Found {len(networks)} supported networks:")
+        for net in networks:
+            print(f"  - {net['name']} (Chain ID: {net['chain_id']}, Token: {net['native_token']})")
+    except Exception as e:
+        print(f"✗ Error getting networks: {e}")
 
-# Test 4: Connect wallet (simulated)
-print("\n[Test 4] Testing wallet connection...")
-try:
-    # Use a test wallet address
-    test_address = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
-    result = wallet.connect_wallet(test_address)
-    
-    if result.get("success"):
-        print(f"✓ Wallet connected successfully")
-        print(f"  Address: {result['wallet_address']}")
-        print(f"  Network: {result['network']}")
-        print(f"  Balance: {result['balance']} {result['native_token']}")
-    else:
-        print(f"⚠ Connection result: {result}")
-except Exception as e:
-    print(f"✗ Wallet connection error: {e}")
+    # Test 4: Connect wallet (simulated)
+    print("\n[Test 4] Testing wallet connection...")
+    try:
+        # Use a test wallet address
+        test_address = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+        result = wallet.connect_wallet(test_address)
 
-# Test 5: Get connection status
-print("\n[Test 5] Getting connection status...")
+        if result.get("success"):
+            print(f"✓ Wallet connected successfully")
+            print(f"  Address: {result['wallet_address']}")
+            print(f"  Network: {result['network']}")
+            print(f"  Balance: {result['balance']} {result['native_token']}")
+        else:
+            print(f"⚠ Connection result: {result}")
+    except Exception as e:
+        print(f"✗ Wallet connection error: {e}")
+
+    # Test 5: Get connection status
+    print("\n[Test 5] Getting connection status...")
+
+
+if __name__ == "__main__":
+    run_walletconnect_integration_tests()
 try:
     status = wallet.get_connection_status()
     print(f"✓ Status retrieved:")
