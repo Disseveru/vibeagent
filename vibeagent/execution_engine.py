@@ -31,9 +31,9 @@ class ExecutionEngine:
             self.avocado = None
             self.logger.warning("No Avocado wallet configured - execution disabled")
 
-        # Pending approvals for manual mode (optimized with separate pending list)
+        # Pending approvals for manual mode (optimized with separate pending set)
         self.pending_approvals = {}
-        self._pending_ids = []  # Maintain list of pending IDs for O(1) filtering
+        self._pending_ids = set()  # Use set for O(1) add/remove operations
 
         # Execution history
         self.execution_history = []
@@ -126,7 +126,7 @@ class ExecutionEngine:
             "submitted_at": datetime.now().isoformat(),
             "status": "pending",
         }
-        self._pending_ids.append(approval_id)
+        self._pending_ids.add(approval_id)
 
         self.logger.info(f"Opportunity submitted for approval: {approval_id}")
         return approval_id
@@ -146,9 +146,8 @@ class ExecutionEngine:
         approval["status"] = "approved"
         approval["approved_at"] = datetime.now().isoformat()
 
-        # Remove from pending list
-        if approval_id in self._pending_ids:
-            self._pending_ids.remove(approval_id)
+        # Remove from pending set (O(1) operation)
+        self._pending_ids.discard(approval_id)
 
         self.logger.info(f"Transaction approved: {approval_id}")
 
@@ -169,9 +168,8 @@ class ExecutionEngine:
         approval["status"] = "rejected"
         approval["rejected_at"] = datetime.now().isoformat()
 
-        # Remove from pending list
-        if approval_id in self._pending_ids:
-            self._pending_ids.remove(approval_id)
+        # Remove from pending set (O(1) operation)
+        self._pending_ids.discard(approval_id)
 
         self.logger.info(f"Transaction rejected: {approval_id}")
         return True
@@ -257,11 +255,10 @@ class ExecutionEngine:
             return False
 
     def get_pending_approvals(self) -> list:
-        """Get list of pending approvals using optimized pending IDs list"""
+        """Get list of pending approvals using optimized pending IDs set"""
         return [
             {"approval_id": approval_id, **self.pending_approvals[approval_id]}
             for approval_id in self._pending_ids
-            if approval_id in self.pending_approvals
         ]
 
     def get_execution_history(self, limit: int = 50) -> list:
