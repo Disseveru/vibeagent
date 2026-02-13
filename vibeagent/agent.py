@@ -119,16 +119,17 @@ class VibeAgent:
         price_diff_pct = ((max_price - min_price) / min_price) * 100
         print(f"Price difference: {price_diff_pct:.2f}%")
 
-        # Estimate profit with 10 ETH flash loan (example)
-        flash_loan_amount = 10  # ETH
+        # Estimate profit with example flash loan amount
+        # Note: In production, this would be optimized based on liquidity depth
+        flash_loan_amount = 10  # ETH (example amount for estimation)
 
         # Rough profit calculation (simplified)
         # Buy token_b at min_price, sell at max_price
         profit_per_token = max_price - min_price
         estimated_profit = flash_loan_amount * profit_per_token
 
-        # Estimate gas cost
-        gas_estimate = 500000  # Complex arbitrage with flash loan
+        # Estimate gas cost (complex arbitrage with flash loan and swaps)
+        gas_estimate = 500000  # Gas units for multi-step arbitrage
         gas_cost_usd = self._estimate_gas_cost(gas_estimate)
 
         # Calculate net profit
@@ -241,13 +242,14 @@ class VibeAgent:
             # Can liquidate if health factor < 1.0
             if health_factor_float < 1.0:
                 # Calculate potential profit (simplified)
-                # Liquidation bonus is typically 5-10%
-                liquidation_bonus = 0.05  # 5%
+                # Note: Liquidation bonus varies by protocol and asset (typically 5-10%)
+                # In production, query from protocol's liquidation configuration
+                liquidation_bonus = 0.05  # 5% (conservative estimate)
                 max_liquidatable = total_debt * 0.5  # Can liquidate up to 50% of debt
                 potential_profit = (max_liquidatable / (10**8)) * liquidation_bonus
 
-                # Estimate gas cost with dynamic gas price
-                gas_estimate = 400000
+                # Estimate gas cost for liquidation transaction
+                gas_estimate = 400000  # Gas units for liquidation call
                 gas_cost_usd = self._estimate_gas_cost(gas_estimate)
                 net_profit = potential_profit - gas_cost_usd
 
@@ -559,20 +561,30 @@ class VibeAgent:
     def _get_uniswap_v3_price(
         self, token_a: str, token_b: str, amount_in: int, decimals_a: int, decimals_b: int
     ) -> Optional[float]:
-        """Get price from Uniswap V3 Quoter"""
+        """Get price from Uniswap V3 Quoter (tries multiple fee tiers)"""
         try:
             quoter_address = CONTRACT_ADDRESSES[self.network]["uniswap_v3_quoter"]
             quoter = self.web3.eth.contract(address=quoter_address, abi=UNISWAP_V3_QUOTER_ABI)
 
-            # Try 0.3% fee tier (most common)
-            fee = 3000
-            amount_out = quoter.functions.quoteExactInputSingle(
-                token_a, token_b, fee, amount_in, 0
-            ).call()
+            # Try multiple fee tiers in order of liquidity (0.3%, 0.05%, 1%)
+            fee_tiers = [3000, 500, 10000]
 
-            # Convert to float price
-            price = (amount_out / (10**decimals_b)) / (amount_in / (10**decimals_a))
-            return price
+            for fee in fee_tiers:
+                try:
+                    amount_out = quoter.functions.quoteExactInputSingle(
+                        token_a, token_b, fee, amount_in, 0
+                    ).call()
+
+                    # Convert to float price
+                    price = (amount_out / (10**decimals_b)) / (amount_in / (10**decimals_a))
+                    return price
+
+                except Exception as fee_error:
+                    # This fee tier might not exist for this pair, try next one
+                    continue
+
+            print(f"No valid Uniswap V3 pool found for pair")
+            return None
 
         except Exception as e:
             print(f"Error querying Uniswap V3: {e}")
@@ -605,10 +617,10 @@ class VibeAgent:
             gas_price = self.web3.eth.gas_price
             # Estimate ETH cost
             eth_cost = (gas_price * gas_units) / (10**18)
-            
+
             # Get real-time ETH price from WETH/USDC pair
             eth_price_usd = self._get_eth_price_usd()
-            
+
             return int(eth_cost * eth_price_usd)
         except Exception as e:
             print(f"Error estimating gas cost: {e}")
@@ -623,7 +635,7 @@ class VibeAgent:
                 cached_price, cached_time = self._price_cache[cache_key]
                 if time.time() - cached_time < self._price_cache_ttl:
                     return cached_price
-            
+
             # Token addresses for WETH and USDC on each network
             weth_usdc_pairs = {
                 "ethereum": {
@@ -639,21 +651,21 @@ class VibeAgent:
                     "usdc": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
                 },
             }
-            
+
             pair = weth_usdc_pairs.get(self.network, weth_usdc_pairs["ethereum"])
-            
+
             # Get price from Uniswap V3
             price = self._get_dex_price(pair["weth"], pair["usdc"], "uniswap_v3")
-            
+
             if price and price > 0:
                 # Cache the price
                 self._price_cache[cache_key] = (price, time.time())
                 return price
-            
+
             # Fallback to conservative estimate if price fetch fails
             print("Warning: Could not fetch ETH price, using fallback value")
             return 2000.0  # Fallback value
-            
+
         except Exception as e:
             print(f"Error fetching ETH price: {e}")
             return 2000.0  # Fallback value

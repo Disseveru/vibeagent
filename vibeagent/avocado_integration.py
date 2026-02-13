@@ -103,7 +103,9 @@ class AvocadoIntegration:
             "transactions": actions,
         }
 
-    def _convert_step_to_action(self, step: Dict[str, Any], strategy: Dict[str, Any] = None) -> Optional[Dict[str, Any]]:
+    def _convert_step_to_action(
+        self, step: Dict[str, Any], strategy: Dict[str, Any] = None
+    ) -> Optional[Dict[str, Any]]:
         """Convert a strategy step into an Avocado action"""
         action_type = step.get("action")
 
@@ -119,7 +121,9 @@ class AvocadoIntegration:
 
         return None
 
-    def _build_flash_loan_action(self, step: Dict[str, Any], strategy: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _build_flash_loan_action(
+        self, step: Dict[str, Any], strategy: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Build flash loan action for Avocado"""
         protocol = step.get("protocol", "aave_v3")
         token = step.get("token")
@@ -319,7 +323,9 @@ class AvocadoIntegration:
 
         return warnings
 
-    def _encode_flash_loan_call(self, token: str, amount: str, opportunity: Optional[Dict[str, Any]] = None) -> str:
+    def _encode_flash_loan_call(
+        self, token: str, amount: str, opportunity: Optional[Dict[str, Any]] = None
+    ) -> str:
         """
         Encode Aave V3 flash loan call
 
@@ -383,7 +389,9 @@ class AvocadoIntegration:
             print(f"Error encoding flash loan: {e}")
             return "0x"
 
-    def _encode_swap_call(self, dex: str, from_token: str, to_token: str, amount: Optional[int] = None) -> str:
+    def _encode_swap_call(
+        self, dex: str, from_token: str, to_token: str, amount: Optional[int] = None
+    ) -> str:
         """
         Encode DEX swap call
 
@@ -399,7 +407,7 @@ class AvocadoIntegration:
         try:
             from_token = Web3.to_checksum_address(from_token)
             to_token = Web3.to_checksum_address(to_token)
-            
+
             # Use provided amount or default to 1 token (10**18 wei)
             # In production, this should always be calculated from strategy details
             amount_in = amount if amount is not None else 10**18
