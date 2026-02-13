@@ -266,113 +266,146 @@
             cursor: pointer;
         }
         
-        /* Wallet Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background-color: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            position: relative;
-        }
-        
-        .close {
-            position: absolute;
-            right: 15px;
-            top: 15px;
-            font-size: 28px;
-            font-weight: bold;
-            color: #aaa;
-            cursor: pointer;
-        }
-        
-        .close:hover {
-            color: #333;
-        }
-        
-        /* Wallet Status */
-        .wallet-status {
-            background: #f0f9ff;
-            border: 2px solid #667eea;
-            border-radius: 10px;
-            padding: 10px 15px;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        
-        .wallet-status.connected {
-            background: #f0fdf4;
-            border-color: #10b981;
-        }
-        
-        /* Execution Stats */
-        .execution-status {
-            background: #f8f9fa;
-            border-radius: 10px;
+        /* Wallet Connection Styles */
+        .wallet-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .wallet-section h2 {
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .wallet-connected {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .wallet-address,
+        .wallet-balance,
+        .wallet-network {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .wallet-address .address {
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .wallet-balance .balance {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .copy-btn,
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .copy-btn:hover,
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .wallet-disconnected {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .wallet-info-text {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        
+        #walletStatus {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .wallet-buttons {
+            display: flex;
+            gap: 10px;
             margin-top: 15px;
         }
         
-        .stat-box {
-            background: white;
-            border-radius: 8px;
+        .wallet-buttons button {
+            flex: 1;
+        }
+        
+        /* Transaction display styles */
+        .transaction-list {
+            margin-top: 20px;
+        }
+        
+        .transaction-item {
+            background: #f8f9fa;
             padding: 15px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
         }
         
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 8px;
+        .transaction-hash {
+            font-family: monospace;
+            font-size: 0.85em;
+            word-break: break-all;
         }
         
-        .stat-value {
-            color: #667eea;
-            font-size: 24px;
-            font-weight: bold;
+        .transaction-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
         }
         
-        .warning-box {
+        .transaction-status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .transaction-status.pending {
             background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 15px;
             color: #856404;
-            margin: 15px 0;
         }
         
-        /* Validation result styles */
-        .check-item {
-            color: green;
+        .transaction-status.failed {
+            background: #f8d7da;
+            color: #721c24;
         }
         
-        .error-item {
-            color: red;
+        .explorer-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
         }
         
-        .warning-item {
-            color: orange;
+        .explorer-link:hover {
+            text-decoration: underline;
         }
     </style>
+    <!-- Load Reown Wallet Integration -->
+    <script src="/static/reown-wallet.js"></script>
 </head>
 <body>
     <div class="container">
@@ -391,88 +424,109 @@
         
         <div id="statusMessage"></div>
         
-        <!-- Wallet Connection Modal -->
-        <div id="walletModal" class="modal hidden">
-            <div class="modal-content">
-                <span class="close" onclick="closeWalletModal()">&times;</span>
-                <h2>🔗 Connect Your Wallet</h2>
-                <p style="color: #666; margin-bottom: 20px;">
-                    Connect any wallet via WalletConnect to execute autonomous arbitrage transactions
-                </p>
-                
-                <div class="form-group">
-                    <label for="walletNetwork">Select Network:</label>
-                    <select id="walletNetwork">
-                        <option value="ethereum">Ethereum Mainnet</option>
-                        <option value="polygon">Polygon</option>
-                        <option value="arbitrum">Arbitrum</option>
-                    </select>
+        <!-- Wallet Connection Section (Reown AppKit) -->
+        <div class="wallet-section">
+            <h2>💳 Wallet Connection</h2>
+            <div id="walletInfo">
+                <div class="wallet-disconnected">
+                    <p>Connect your wallet to start using VibeAgent</p>
+                    <p class="wallet-info-text">
+                        Supports 300+ wallets including MetaMask, Trust Wallet, Coinbase Wallet, Rainbow, and more
+                    </p>
                 </div>
-                
-                <div class="form-group">
-                    <label for="walletAddressInput">Wallet Address:</label>
-                    <input type="text" id="walletAddressInput" placeholder="0x..." />
-                    <small style="color: #666; display: block; margin-top: 5px;">
-                        In production, this would use WalletConnect's browser modal for secure connection
-                    </small>
-                </div>
-                
-                <button onclick="connectWallet()" class="btn-primary" style="width: 100%; margin-top: 10px;">
-                    Connect Wallet
-                </button>
-                
-                <div id="walletModalStatus" style="margin-top: 15px;"></div>
             </div>
+            <div class="wallet-buttons">
+                <button id="connectWalletBtn" onclick="connectWallet()">🔗 Connect Wallet</button>
+                <button id="disconnectWalletBtn" onclick="disconnectWallet()" style="display: none;">❌ Disconnect</button>
+            </div>
+            <div id="walletStatus" class="status-message"></div>
         </div>
         
         <!-- Configuration Section -->
         <div class="section">
             <h2>⚙️ Configuration</h2>
             <div class="form-group">
-                <label for="network">Agent Network:</label>
-                <select id="network">
+                <label for="network">Select Network:</label>
+                <select id="network" onchange="onNetworkChange()">
                     <option value="ethereum">Ethereum Mainnet</option>
                     <option value="polygon">Polygon</option>
                     <option value="arbitrum">Arbitrum</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="walletAddress">Avocado Multi-Sig Wallet Address (optional):</label>
-                <input type="text" id="walletAddress" placeholder="0x..." />
+                <label for="walletAddress">Avocado Multi-Sig Wallet Address (Optional):</label>
+                <input type="text" id="walletAddress" placeholder="0x... (or use connected wallet)" />
                 <small style="color: #666; display: block; margin-top: 5px;">
-                    For Avocado transaction builder export. Leave empty if using WalletConnect only.
+                    If you have connected a wallet above, you can leave this empty to use that address. 
+                    Or enter a different Avocado multi-sig address here.
                 </small>
             </div>
             <button onclick="initializeAgent()">Initialize Agent</button>
         </div>
         
-        <!-- Autonomous Execution Section -->
+        <!-- Autonomous Mode Section -->
         <div class="section" id="autonomousSection">
-            <h2>⚡ Autonomous Execution</h2>
-            <p style="color: #666; margin-bottom: 15px;">
-                Connect your wallet to enable autonomous arbitrage execution with AI-powered strategy optimization
-            </p>
+            <h2>🤖 Autonomous Mode</h2>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="autonomousMode" onchange="toggleAutonomousMode()"> 
+                    Enable Autonomous Scanning
+                </label>
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    Continuously scan for arbitrage opportunities across all configured networks
+                </small>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="requireApproval" checked> 
+                    Require Manual Approval
+                </label>
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    When enabled, profitable opportunities will wait for your approval before execution
+                </small>
+            </div>
+            <div class="form-group">
+                <label for="minProfit">Minimum Profit (USD):</label>
+                <input type="number" id="minProfit" value="50" min="0" step="10" />
+            </div>
+            <div class="form-group">
+                <label for="maxGas">Max Gas Price (Gwei):</label>
+                <input type="number" id="maxGas" value="100" min="0" step="5" />
+            </div>
+            <div class="form-group">
+                <label for="scanInterval">Scan Interval (seconds):</label>
+                <input type="number" id="scanInterval" value="60" min="10" step="10" />
+            </div>
+            <button onclick="updateConfig()" class="btn-secondary">Update Configuration</button>
             
-            <div id="executionStatus" class="execution-status hidden">
-                <h3>📊 Execution Statistics</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px;">
-                    <div class="stat-box">
-                        <div class="stat-label">Successful</div>
-                        <div class="stat-value" id="statSuccess">0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">Failed</div>
-                        <div class="stat-value" id="statFailed">0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">Total Profit</div>
-                        <div class="stat-value" id="statProfit">$0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">Status</div>
-                        <div class="stat-value" id="statStatus">Ready</div>
-                    </div>
-                </div>
+            <!-- Scanner Status -->
+            <div id="scannerStatus" class="result-box hidden">
+                <h3>Scanner Status</h3>
+                <div id="statusContent"></div>
+            </div>
+            
+            <!-- Pending Approvals -->
+            <div id="pendingApprovals" class="hidden" style="margin-top: 15px;">
+                <h3>Pending Approvals</h3>
+                <div id="approvalsContent"></div>
+            </div>
+            
+            <!-- Execution Stats -->
+            <div id="executionStats" class="result-box hidden" style="margin-top: 15px;">
+                <h3>Execution Statistics</h3>
+                <div id="statsContent"></div>
+            </div>
+            
+            <!-- Recent Opportunities -->
+            <div id="recentOpportunities" class="result-box hidden" style="margin-top: 15px;">
+                <h3>Recent Opportunities</h3>
+                <div id="opportunitiesContent"></div>
+            </div>
+            
+            <!-- Transaction History -->
+            <div id="transactionHistory" class="result-box hidden" style="margin-top: 15px;">
+                <h3>Transaction History</h3>
+                <div id="transactionList" class="transaction-list"></div>
             </div>
         </div>
         
@@ -625,11 +679,32 @@
             document.getElementById(`${tabName}-tab`).classList.add('active');
         }
         
+        // Handle network change from dropdown
+        async function onNetworkChange() {
+            const network = document.getElementById('network').value;
+            const walletState = getWalletState();
+            
+            if (walletState.connected) {
+                // Switch network in wallet
+                await switchNetwork(network);
+            }
+        }
+        
         async function initializeAgent() {
             const network = document.getElementById('network').value;
-            const walletAddress = document.getElementById('walletAddress').value;
+            let walletAddress = document.getElementById('walletAddress').value;
             
-            // Wallet address is now optional
+            // If no wallet address entered, try to use connected wallet
+            if (!walletAddress) {
+                const walletState = getWalletState();
+                if (walletState.connected) {
+                    walletAddress = walletState.address;
+                } else {
+                    showStatus('Please connect your wallet or enter an Avocado wallet address', 'error');
+                    return;
+                }
+            }
+            
             try {
                 const response = await fetch('/api/initialize', {
                     method: 'POST',
@@ -821,73 +896,27 @@
             });
         }
         
-        // =====================================================================
-        // WalletConnect Integration Functions
-        // =====================================================================
+        // Autonomous Mode Functions
+        let statusUpdateInterval = null;
         
-        // Utility function to format wallet address
-        function formatWalletAddress(address) {
-            if (!address || address.length < 10) return address;
-            return `${address.substring(0, 6)}...${address.substring(38)}`;
-        }
-        
-        function toggleWalletModal() {
-            const modal = document.getElementById('walletModal');
-            if (modal.classList.contains('hidden')) {
-                modal.classList.remove('hidden');
-                modal.classList.add('show');
+        async function toggleAutonomousMode() {
+            const enabled = document.getElementById('autonomousMode').checked;
+            
+            if (enabled) {
+                await startAutonomousScanner();
             } else {
-                closeWalletModal();
+                await stopAutonomousScanner();
             }
         }
         
-        function closeWalletModal() {
-            const modal = document.getElementById('walletModal');
-            modal.classList.remove('show');
-            modal.classList.add('hidden');
-        }
-        
-        async function connectWallet() {
-            const walletAddress = document.getElementById('walletAddressInput').value;
-            const network = document.getElementById('walletNetwork').value;
-            
-            if (!walletAddress) {
-                showModalStatus('Please enter wallet address', 'error');
-                return;
-            }
+        async function startAutonomousScanner() {
+            showStatus('Starting autonomous scanner...', 'info');
             
             try {
-                showModalStatus('Connecting wallet...', 'info');
+                // First update config
+                await updateConfig();
                 
-                const response = await fetch('/api/wallet/connect', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        wallet_address: walletAddress,
-                        network: network
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    walletConnected = true;
-                    updateWalletUI(data);
-                    closeWalletModal();
-                    showStatus(`Wallet connected: ${formatWalletAddress(walletAddress)}`, 'success');
-                    updateExecuteControls();
-                    checkExecutionStats();
-                } else {
-                    showModalStatus(`Error: ${data.error}`, 'error');
-                }
-            } catch (error) {
-                showModalStatus(`Error: ${error.message}`, 'error');
-            }
-        }
-        
-        async function disconnectWallet() {
-            try {
-                const response = await fetch('/api/wallet/disconnect', {
+                const response = await fetch('/api/autonomous/start', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'}
                 });
@@ -895,10 +924,38 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    walletConnected = false;
-                    updateWalletUI(null);
-                    showStatus('Wallet disconnected', 'info');
-                    updateExecuteControls();
+                    showStatus('Autonomous scanner started!', 'success');
+                    document.getElementById('scannerStatus').classList.remove('hidden');
+                    
+                    // Start periodic status updates
+                    startStatusUpdates();
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                    document.getElementById('autonomousMode').checked = false;
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                document.getElementById('autonomousMode').checked = false;
+            }
+        }
+        
+        async function stopAutonomousScanner() {
+            showStatus('Stopping autonomous scanner...', 'info');
+            
+            try {
+                const response = await fetch('/api/autonomous/stop', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('Autonomous scanner stopped', 'success');
+                    document.getElementById('scannerStatus').classList.add('hidden');
+                    
+                    // Stop status updates
+                    stopStatusUpdates();
                 } else {
                     showStatus(`Error: ${data.error}`, 'error');
                 }
@@ -907,219 +964,294 @@
             }
         }
         
-        async function checkWalletStatus() {
-            try {
-                const response = await fetch('/api/wallet/status');
-                const data = await response.json();
-                
-                if (data.connected) {
-                    walletConnected = true;
-                    updateWalletUI(data);
-                    updateExecuteControls();
-                }
-            } catch (error) {
-                console.log('Wallet not connected');
-            }
-        }
-        
-        function updateWalletUI(walletData) {
-            const btn = document.getElementById('walletConnectBtn');
-            const btnText = document.getElementById('walletBtnText');
-            const statusDiv = document.getElementById('walletStatus');
-            const executionStatus = document.getElementById('executionStatus');
+        async function updateConfig() {
+            const config = {
+                autonomous_mode: document.getElementById('autonomousMode').checked,
+                require_manual_approval: document.getElementById('requireApproval').checked,
+                min_profit_usd: parseFloat(document.getElementById('minProfit').value),
+                max_gas_price_gwei: parseFloat(document.getElementById('maxGas').value),
+                scan_interval_seconds: parseInt(document.getElementById('scanInterval').value)
+            };
             
-            if (walletData && walletData.wallet_address) {
-                const addr = walletData.wallet_address;
-                btnText.textContent = formatWalletAddress(addr);
-                btn.onclick = disconnectWallet;
-                
-                statusDiv.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>
-                            <strong>${walletData.network.charAt(0).toUpperCase() + walletData.network.slice(1)}</strong> | 
-                            Balance: ${walletData.balance.toFixed(4)} ${walletData.native_token}
-                        </span>
-                        <button onclick="disconnectWallet()" style="padding: 5px 10px; font-size: 12px;">Disconnect</button>
-                    </div>
-                `;
-                statusDiv.classList.remove('hidden');
-                statusDiv.classList.add('connected');
-                
-                // Show execution status
-                if (executionStatus) {
-                    executionStatus.classList.remove('hidden');
-                }
-            } else {
-                btnText.textContent = '🔗 Connect Wallet';
-                btn.onclick = toggleWalletModal;
-                statusDiv.classList.add('hidden');
-                statusDiv.classList.remove('connected');
-                
-                // Hide execution status
-                if (executionStatus) {
-                    executionStatus.classList.add('hidden');
-                }
-            }
-        }
-        
-        function updateExecuteControls() {
-            const walletRequiredMsg = document.getElementById('walletRequiredMsg');
-            const executeControls = document.getElementById('executeControls');
-            
-            if (walletConnected) {
-                walletRequiredMsg.classList.add('hidden');
-                executeControls.classList.remove('hidden');
-            } else {
-                walletRequiredMsg.classList.remove('hidden');
-                executeControls.classList.add('hidden');
-            }
-        }
-        
-        function showModalStatus(message, type) {
-            const statusDiv = document.getElementById('walletModalStatus');
-            statusDiv.className = `status ${type}`;
-            statusDiv.textContent = message;
-            statusDiv.style.display = 'block';
-        }
-        
-        async function validateCurrentOpportunity() {
-            if (!currentStrategy) {
-                showStatus('Please scan for an opportunity first', 'error');
-                return;
-            }
-            
-            if (!walletConnected) {
-                showStatus('Please connect your wallet first', 'error');
-                return;
-            }
+            // Also update wallet safety settings
+            updateSafetySettingsFromUI();
             
             try {
-                showStatus('Validating opportunity...', 'info');
-                
-                const response = await fetch('/api/execute/validate', {
+                const response = await fetch('/api/autonomous/config', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ opportunity: currentStrategy })
+                    body: JSON.stringify(config)
                 });
                 
                 const data = await response.json();
-                
-                const resultDiv = document.getElementById('validationResult');
-                
-                let checksHtml = data.checks.map(c => `<li class="check-item">${c}</li>`).join('');
-                let errorsHtml = data.errors.map(e => `<li class="error-item">✗ ${e}</li>`).join('');
-                let warningsHtml = data.warnings.map(w => `<li class="warning-item">⚠ ${w}</li>`).join('');
-                
-                resultDiv.innerHTML = `
-                    <h3>Safety Validation Results</h3>
-                    <p><strong>Status:</strong> ${data.passed ? '<span class="check-item">✓ PASSED</span>' : '<span class="error-item">✗ FAILED</span>'}</p>
-                    ${checksHtml ? `<ul>${checksHtml}</ul>` : ''}
-                    ${errorsHtml ? `<h4 class="error-item">Errors:</h4><ul>${errorsHtml}</ul>` : ''}
-                    ${warningsHtml ? `<h4 class="warning-item">Warnings:</h4><ul>${warningsHtml}</ul>` : ''}
-                `;
-                resultDiv.classList.remove('hidden');
-                
-                // Enable execute button if passed
-                const executeBtn = document.getElementById('executeBtn');
-                executeBtn.disabled = !data.passed;
-                
-                showStatus(data.passed ? 'Validation passed!' : 'Validation failed', data.passed ? 'success' : 'error');
-            } catch (error) {
-                showStatus(`Error: ${error.message}`, 'error');
-            }
-        }
-        
-        async function executeCurrentOpportunity() {
-            if (!currentStrategy) {
-                showStatus('Please scan for an opportunity first', 'error');
-                return;
-            }
-            
-            if (!walletConnected) {
-                showStatus('Please connect your wallet first', 'error');
-                return;
-            }
-            
-            if (!confirm('Are you sure you want to execute this opportunity? This will create a transaction request.')) {
-                return;
-            }
-            
-            try {
-                showStatus('Executing opportunity...', 'info');
-                
-                const response = await fetch('/api/execute/arbitrage', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ opportunity: currentStrategy })
-                });
-                
-                const data = await response.json();
-                
-                const resultDiv = document.getElementById('executeResult');
                 
                 if (data.success) {
-                    if (data.simulated) {
-                        resultDiv.innerHTML = `
-                            <h3>🎭 Simulation Mode</h3>
-                            <p style="color: orange;"><strong>Note:</strong> ${data.message}</p>
-                            <p><strong>Mock TX Hash:</strong> <code>${data.tx_hash}</code></p>
-                            <p><strong>Estimated Profit:</strong> $${data.profit_usd.toFixed(2)}</p>
-                            <p><strong>Recipient:</strong> ${data.recipient}</p>
-                            <p style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px;">
-                                To enable real execution, deploy the arbitrage contract and update the executor module.
-                            </p>
-                        `;
-                    } else {
-                        resultDiv.innerHTML = `
-                            <h3>Transaction Created</h3>
-                            <p><strong>Request ID:</strong> ${data.request_id}</p>
-                            <p><strong>Status:</strong> ${data.status}</p>
-                            <p style="color: blue;">${data.message}</p>
-                            <pre>${JSON.stringify(data.transaction, null, 2)}</pre>
-                        `;
-                    }
-                    resultDiv.classList.remove('hidden');
-                    showStatus('Execution initiated!', 'success');
-                    
-                    // Update stats
-                    checkExecutionStats();
+                    showStatus('Configuration updated', 'success');
+                    return true;
                 } else {
-                    resultDiv.innerHTML = `
-                        <h3 style="color: red;">Execution Failed</h3>
-                        <p>${data.error}</p>
-                        ${data.validation ? `<pre>${JSON.stringify(data.validation, null, 2)}</pre>` : ''}
+                    showStatus(`Error: ${data.error}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function startStatusUpdates() {
+            if (statusUpdateInterval) return;
+            
+            // Update immediately
+            updateStatus();
+            
+            // Then update every 5 seconds
+            statusUpdateInterval = setInterval(updateStatus, 5000);
+        }
+        
+        function stopStatusUpdates() {
+            if (statusUpdateInterval) {
+                clearInterval(statusUpdateInterval);
+                statusUpdateInterval = null;
+            }
+        }
+        
+        async function updateStatus() {
+            try {
+                // Get scanner status
+                const statusResponse = await fetch('/api/autonomous/status');
+                const statusData = await statusResponse.json();
+                
+                if (statusData.success) {
+                    displayStatus(statusData.status);
+                }
+                
+                // Get execution stats
+                const statsResponse = await fetch('/api/autonomous/stats');
+                const statsData = await statsResponse.json();
+                
+                if (statsData.success) {
+                    displayStats(statsData.stats);
+                }
+                
+                // Get pending approvals
+                const approvalsResponse = await fetch('/api/autonomous/approvals');
+                const approvalsData = await approvalsResponse.json();
+                
+                if (approvalsData.success) {
+                    displayApprovals(approvalsData.approvals);
+                }
+                
+                // Get recent opportunities
+                const oppsResponse = await fetch('/api/autonomous/opportunities?limit=10');
+                const oppsData = await oppsResponse.json();
+                
+                if (oppsData.success) {
+                    displayOpportunities(oppsData.opportunities);
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+            }
+        }
+        
+        function displayStatus(status) {
+            const statusContent = document.getElementById('statusContent');
+            const runningIndicator = status.is_running ? 
+                '<span style="color: #48c774;">● Running</span>' : 
+                '<span style="color: #999;">○ Stopped</span>';
+            
+            statusContent.innerHTML = `
+                <p><strong>Status:</strong> ${runningIndicator}</p>
+                <p><strong>Last Scan:</strong> ${status.last_scan || 'Never'}</p>
+                <p><strong>Total Scans:</strong> ${status.scan_count}</p>
+                <p><strong>Networks:</strong> ${status.networks.join(', ')}</p>
+                <p><strong>Monitored Pairs:</strong> ${status.monitored_pairs}</p>
+                <p><strong>Opportunities Found:</strong> ${status.stats.opportunities_found}</p>
+                <p><strong>Opportunities Executed:</strong> ${status.stats.opportunities_executed}</p>
+            `;
+        }
+        
+        function displayStats(stats) {
+            const statsContent = document.getElementById('statsContent');
+            const statsDiv = document.getElementById('executionStats');
+            
+            if (stats.total_executions > 0) {
+                statsDiv.classList.remove('hidden');
+                
+                statsContent.innerHTML = `
+                    <p><strong>Total Executions:</strong> ${stats.total_executions}</p>
+                    <p><strong>Successful:</strong> <span style="color: #48c774;">${stats.successful}</span></p>
+                    <p><strong>Failed:</strong> <span style="color: #f14668;">${stats.failed}</span></p>
+                    <p><strong>Total Profit:</strong> <span style="color: #48c774; font-size: 1.2em;">$${stats.total_profit_usd.toFixed(2)}</span></p>
+                    <p><strong>Pending Approvals:</strong> ${stats.pending_approvals}</p>
+                    <hr style="margin: 10px 0;">
+                    <h4>By Network:</h4>
+                    ${Object.entries(stats.by_network).map(([network, netStats]) => `
+                        <p style="margin-left: 15px;">
+                            <strong>${network}:</strong> ${netStats.successful}/${netStats.total_executions} 
+                            (Profit: $${netStats.total_profit_usd.toFixed(2)})
+                        </p>
+                    `).join('')}
+                `;
+            }
+        }
+        
+        function displayApprovals(approvals) {
+            const approvalsDiv = document.getElementById('pendingApprovals');
+            const approvalsContent = document.getElementById('approvalsContent');
+            
+            if (approvals.length > 0) {
+                approvalsDiv.classList.remove('hidden');
+                
+                approvalsContent.innerHTML = approvals.map(approval => {
+                    const opp = approval.opportunity;
+                    return `
+                        <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                            <p><strong>Type:</strong> ${opp.type}</p>
+                            <p><strong>Network:</strong> ${approval.network}</p>
+                            <p><strong>Estimated Profit:</strong> $${opp.estimated_profit_usd.toFixed(2)}</p>
+                            <p><strong>Submitted:</strong> ${approval.submitted_at}</p>
+                            <button onclick="approveTransaction('${approval.network}', '${approval.approval_id}')" 
+                                    class="btn-secondary" style="margin-right: 10px;">
+                                ✓ Approve
+                            </button>
+                            <button onclick="rejectTransaction('${approval.network}', '${approval.approval_id}')" 
+                                    style="background: #f14668;">
+                                ✗ Reject
+                            </button>
+                        </div>
                     `;
-                    resultDiv.classList.remove('hidden');
-                    showStatus(`Execution failed: ${data.error}`, 'error');
+                }).join('');
+            } else {
+                approvalsDiv.classList.add('hidden');
+            }
+        }
+        
+        function displayOpportunities(opportunities) {
+            const oppsDiv = document.getElementById('recentOpportunities');
+            const oppsContent = document.getElementById('opportunitiesContent');
+            
+            if (opportunities.length > 0) {
+                oppsDiv.classList.remove('hidden');
+                
+                oppsContent.innerHTML = `
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #ddd;">
+                                <th style="padding: 8px; text-align: left;">Time</th>
+                                <th style="padding: 8px; text-align: left;">Network</th>
+                                <th style="padding: 8px; text-align: left;">Type</th>
+                                <th style="padding: 8px; text-align: right;">Profit</th>
+                                <th style="padding: 8px; text-align: center;">Profitable</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${[...opportunities].reverse().map(opp => `
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px;">${new Date(opp.discovered_at).toLocaleTimeString()}</td>
+                                    <td style="padding: 8px;">${opp.network}</td>
+                                    <td style="padding: 8px;">${opp.type}</td>
+                                    <td style="padding: 8px; text-align: right;">$${opp.estimated_profit_usd.toFixed(2)}</td>
+                                    <td style="padding: 8px; text-align: center;">
+                                        ${opp.profitable ? '<span style="color: #48c774;">✓</span>' : '<span style="color: #999;">✗</span>'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+        }
+        
+        async function approveTransaction(network, approvalId) {
+            showStatus('Approving transaction...', 'info');
+            
+            try {
+                const response = await fetch(`/api/autonomous/approve/${network}/${approvalId}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('Transaction approved and executed!', 'success');
+                    updateStatus(); // Refresh status
+                } else {
+                    showStatus(`Error: ${data.error || data.message}`, 'error');
                 }
             } catch (error) {
                 showStatus(`Error: ${error.message}`, 'error');
             }
         }
         
-        async function checkExecutionStats() {
-            if (!walletConnected) return;
+        async function rejectTransaction(network, approvalId) {
+            showStatus('Rejecting transaction...', 'info');
             
             try {
-                const response = await fetch('/api/execute/stats');
+                const response = await fetch(`/api/autonomous/reject/${network}/${approvalId}`, {
+                    method: 'POST'
+                });
+                
                 const data = await response.json();
                 
-                document.getElementById('statSuccess').textContent = data.successful_executions || 0;
-                document.getElementById('statFailed').textContent = data.failed_executions || 0;
-                document.getElementById('statProfit').textContent = `$${(data.total_profit_usd || 0).toFixed(2)}`;
-                document.getElementById('statStatus').textContent = data.is_scanning ? 'Scanning...' : 'Ready';
+                if (data.success) {
+                    showStatus('Transaction rejected', 'success');
+                    updateStatus(); // Refresh status
+                } else {
+                    showStatus(`Error: ${data.error || data.message}`, 'error');
+                }
             } catch (error) {
-                console.log('Error fetching stats:', error);
+                showStatus(`Error: ${error.message}`, 'error');
             }
         }
         
-        // Poll stats every 10 seconds if wallet connected
-        setInterval(() => {
-            if (walletConnected) {
-                checkExecutionStats();
+        // Transaction Display Functions
+        function displayTransaction(tx, networkName = 'ethereum') {
+            const txList = document.getElementById('transactionList');
+            if (!txList) return;
+            
+            const txItem = document.createElement('div');
+            txItem.className = 'transaction-item';
+            txItem.innerHTML = `
+                <div>
+                    <strong>Transaction Hash:</strong>
+                    <div class="transaction-hash">
+                        <a href="${getExplorerUrl(tx.hash, networkName)}" 
+                           target="_blank" 
+                           class="explorer-link">${tx.hash}</a>
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <strong>Status:</strong>
+                    <span class="transaction-status ${tx.status || 'pending'}">${tx.status || 'Pending'}</span>
+                </div>
+                ${tx.profit ? `<div style="margin-top: 10px;"><strong>Profit:</strong> $${tx.profit.toFixed(2)}</div>` : ''}
+                ${tx.timestamp ? `<div style="margin-top: 5px; color: #666; font-size: 0.9em;">${new Date(tx.timestamp).toLocaleString()}</div>` : ''}
+            `;
+            
+            txList.insertBefore(txItem, txList.firstChild);
+            
+            // Keep only last 20 transactions
+            while (txList.children.length > 20) {
+                txList.removeChild(txList.lastChild);
             }
-        }, 10000);
-
+        }
+        
+        // Update safety settings based on UI inputs
+        function updateSafetySettingsFromUI() {
+            const settings = {
+                manualApproval: document.getElementById('requireApproval')?.checked ?? true,
+                minProfitUsd: parseFloat(document.getElementById('minProfit')?.value ?? 50),
+                maxGasPriceGwei: parseFloat(document.getElementById('maxGas')?.value ?? 100)
+            };
+            
+            updateSafetySettings(settings);
+            console.log('Safety settings updated:', settings);
+        }
+        
+        // Call this when autonomous mode settings change
+        function onAutonomousSettingsChange() {
+            updateSafetySettingsFromUI();
+        }
         
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {

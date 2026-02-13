@@ -9,16 +9,46 @@ VibeAgent is an intelligent coding assistant that helps you create and execute s
 ## ✨ Features
 
 - 🤖 **AI-Powered Strategy Generation**: Automatically detects and creates optimal DeFi strategies
-- 🔗 **WalletConnect Integration**: Connect any wallet for autonomous arbitrage execution
+- 🔄 **Autonomous Arbitrage Agent**: Continuously scans and executes profitable opportunities automatically
 - 💎 **Flashloan Arbitrage**: Find price differences across DEXes and profit with zero capital
 - 🎯 **Smart Liquidations**: Identify and execute profitable liquidations on lending protocols
-- 🛡️ **Safety First**: Comprehensive checks including gas validation, profit thresholds, and slippage protection
+- 💳 **Reown AppKit Wallet Integration**: Connect with 300+ wallets including MetaMask, Trust Wallet, Coinbase Wallet, Rainbow, and more
 - 🔐 **Avocado Multi-Sig Integration**: Seamlessly integrates with Instadapp's Avocado wallet transaction builder
+- 🛡️ **Safety Checks**: Configurable profit thresholds, gas limits, and blacklists
+- 📊 **Real-Time Dashboard**: Live monitoring of scans, executions, and profits
 - 🌐 **No-Code Web Interface**: Beautiful, intuitive UI for non-technical users
 - ⚡ **CLI Support**: Command-line interface for quick operations
 - 🔗 **Multi-Chain**: Supports Ethereum, Polygon, and Arbitrum
 - 📱 **Android PWA Support**: Install as a native-like app on Android devices
 - 📊 **Real-Time Stats**: Track execution performance and profits
+
+## 💳 Wallet Integration (NEW!)
+
+VibeAgent now supports seamless wallet connection through Reown AppKit:
+
+- **300+ Wallets Supported**: MetaMask, Trust Wallet, Coinbase Wallet, Rainbow, Ledger, and more
+- **One-Click Connection**: Simply click "Connect Wallet" and choose your preferred wallet
+- **Real-Time Balance**: See your wallet balance update in real-time
+- **Network Switching**: Easily switch between Ethereum, Polygon, and Arbitrum
+- **Transaction History**: View all your transactions with blockchain explorer links
+- **Safety First**: Manual approval mode, minimum profit thresholds, and gas price limits
+- **Your Wallet, Your Control**: You maintain full custody of your funds
+
+See the [Wallet Integration Guide](docs/WALLET_INTEGRATION.md) for detailed setup and usage.
+
+## 🤖 Autonomous Agent
+
+NEW! VibeAgent now includes a fully autonomous agent that:
+
+- **Continuously Monitors** arbitrage opportunities across Ethereum, Polygon, and Arbitrum
+- **Executes Automatically** when profitable opportunities are detected (configurable)
+- **Safety First** with minimum profit thresholds, gas limits, and blacklists
+- **Manual Approval Mode** for reviewing transactions before execution
+- **Real-Time Updates** showing scan status, execution stats, and profits
+- **Complete Logging** of all operations for audit trail
+- **Profit Tracking** with automatic transfer to your Avocado wallet
+
+See the [Autonomous Agent Documentation](docs/AUTONOMOUS_AGENT.md) for detailed setup and usage.
 
 ## 🎯 Perfect For
 
