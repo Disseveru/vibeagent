@@ -31,11 +31,20 @@ class ExecutionEngine:
             self.avocado = None
             self.logger.warning("No Avocado wallet configured - execution disabled")
 
-        # Pending approvals for manual mode
+        # Pending approvals for manual mode (optimized with separate pending set)
         self.pending_approvals = {}
+        self._pending_ids = set()  # Use set for O(1) add/remove operations
 
         # Execution history
         self.execution_history = []
+
+        # Performance optimization: maintain running counters instead of iterating history
+        self._stats_counters = {
+            "total_executions": 0,
+            "successful": 0,
+            "failed": 0,
+            "total_profit_usd": 0.0,
+        }
 
     def can_execute(self, opportunity: Dict[str, Any]) -> Tuple[bool, str]:
         """
@@ -117,6 +126,7 @@ class ExecutionEngine:
             "submitted_at": datetime.now().isoformat(),
             "status": "pending",
         }
+        self._pending_ids.add(approval_id)
 
         self.logger.info(f"Opportunity submitted for approval: {approval_id}")
         return approval_id
@@ -136,6 +146,9 @@ class ExecutionEngine:
         approval["status"] = "approved"
         approval["approved_at"] = datetime.now().isoformat()
 
+        # Remove from pending set (O(1) operation)
+        self._pending_ids.discard(approval_id)
+
         self.logger.info(f"Transaction approved: {approval_id}")
 
         # Execute immediately
@@ -154,6 +167,9 @@ class ExecutionEngine:
         approval = self.pending_approvals[approval_id]
         approval["status"] = "rejected"
         approval["rejected_at"] = datetime.now().isoformat()
+
+        # Remove from pending set (O(1) operation)
+        self._pending_ids.discard(approval_id)
 
         self.logger.info(f"Transaction rejected: {approval_id}")
         return True
@@ -217,24 +233,32 @@ class ExecutionEngine:
             }
             self.execution_history.append(execution_record)
 
+            # Update counters
+            self._stats_counters["total_executions"] += 1
+
             # Simulate success (in reality, wait for confirmation)
             profit = opportunity.get("estimated_profit_usd", 0)
             self.logger.log_transaction_success(tx_hash, profit)
             execution_record["status"] = "success"
             execution_record["actual_profit_usd"] = profit
 
+            # Update counters for success
+            self._stats_counters["successful"] += 1
+            self._stats_counters["total_profit_usd"] += profit
+
             return True
 
         except Exception as e:
             self.logger.log_transaction_failure(None, str(e))
+            # Update counters for failure
+            self._stats_counters["failed"] += 1
             return False
 
     def get_pending_approvals(self) -> list:
-        """Get list of pending approvals"""
+        """Get list of pending approvals using optimized pending IDs set"""
         return [
-            {"approval_id": approval_id, **approval_data}
-            for approval_id, approval_data in self.pending_approvals.items()
-            if approval_data["status"] == "pending"
+            {"approval_id": approval_id, **self.pending_approvals[approval_id]}
+            for approval_id in self._pending_ids
         ]
 
     def get_execution_history(self, limit: int = 50) -> list:
@@ -242,21 +266,11 @@ class ExecutionEngine:
         return self.execution_history[-limit:]
 
     def get_stats(self) -> Dict[str, Any]:
-        """Get execution statistics"""
-        total_executions = len(self.execution_history)
-        successful = sum(1 for ex in self.execution_history if ex.get("status") == "success")
-        failed = total_executions - successful
-
-        total_profit = sum(
-            ex.get("actual_profit_usd", 0)
-            for ex in self.execution_history
-            if ex.get("status") == "success"
-        )
-
+        """Get execution statistics using cached counters for O(1) performance"""
         return {
-            "total_executions": total_executions,
-            "successful": successful,
-            "failed": failed,
-            "total_profit_usd": total_profit,
+            "total_executions": self._stats_counters["total_executions"],
+            "successful": self._stats_counters["successful"],
+            "failed": self._stats_counters["failed"],
+            "total_profit_usd": self._stats_counters["total_profit_usd"],
             "pending_approvals": len(self.get_pending_approvals()),
         }

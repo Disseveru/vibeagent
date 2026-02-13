@@ -689,7 +689,11 @@
             connectStatus.textContent = 'Requesting wallet connection...';
             
             if (!window.ethereum) {
+<<<<<<< copilot/resolve-merge-conflicts-pr-19
                 connectStatus.textContent = 'No browser wallet detected. Please install a Reown-compatible wallet to connect.';
+=======
+                connectStatus.textContent = 'No browser wallet detected. Please install a wallet (e.g., MetaMask) to connect.';
+>>>>>>> main
                 connectStatus.classList.remove('info');
                 connectStatus.classList.add('error');
                 return;
@@ -792,7 +796,11 @@
                             </div>
                         </div>
                     </div>
+<<<<<<< copilot/resolve-merge-conflicts-pr-19
                     <div class="metric" style="color:${item.health < healthThresholdWarning ? warningColor : okColor};">Health: ${item.health.toFixed(2)}</div>
+=======
+                    <div class="metric" style="color:${item.health < healthThresholdWarning ? warningColor : okColor};">HL: ${item.health.toFixed(2)}</div>
+>>>>>>> main
                 </div>
             `).join('');
             
@@ -840,6 +848,20 @@
                 content.classList.remove('active');
             });
             document.getElementById(`${safeTab}-tab`).classList.add('active');
+<<<<<<< copilot/resolve-merge-conflicts-pr-19
+=======
+        }
+        
+        // Handle network change from dropdown
+        async function onNetworkChange() {
+            const network = document.getElementById('network').value;
+            const walletState = getWalletState();
+            
+            if (walletState.connected) {
+                // Switch network in wallet
+                await switchNetwork(network);
+            }
+>>>>>>> main
         }
         
         async function initializeAgent() {
