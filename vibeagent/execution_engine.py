@@ -22,11 +22,14 @@ class ExecutionEngine:
         self.logger = logger
         self.network = network
 
-        # Initialize Avocado integration
-        if config.avocado_wallet_address:
-            self.avocado = AvocadoIntegration(
-                wallet_address=config.avocado_wallet_address, network=network
-            )
+        # Initialize Avocado integration only if valid wallet address is configured
+        wallet_addr = config.avocado_wallet_address
+        if wallet_addr and wallet_addr not in ["0x...", "0x"]:
+            try:
+                self.avocado = AvocadoIntegration(wallet_address=wallet_addr, network=network)
+            except ValueError as e:
+                self.avocado = None
+                self.logger.warning(f"Invalid Avocado wallet address: {e}")
         else:
             self.avocado = None
             self.logger.warning("No Avocado wallet configured - execution disabled")
