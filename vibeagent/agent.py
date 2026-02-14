@@ -19,6 +19,22 @@ from .contract_abis import (
 
 load_dotenv()
 
+# Common token addresses for price fetching
+COMMON_TOKENS = {
+    "ethereum": {
+        "WETH": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    },
+    "polygon": {
+        "WETH": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+        "USDC": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+    },
+    "arbitrum": {
+        "WETH": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        "USDC": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    },
+}
+
 
 class VibeAgent:
     """
@@ -580,6 +596,40 @@ class VibeAgent:
             print(f"Error querying SushiSwap: {e}")
             return None
 
+    def _get_eth_price_usd(self) -> float:
+        """
+        Get current ETH price in USD from WETH/USDC pair on DEX
+
+        Returns:
+            ETH price in USD, or 2000 as fallback if unable to fetch
+        """
+        try:
+            # Get WETH and USDC addresses for the current network
+            if self.network not in COMMON_TOKENS:
+                print(f"Network {self.network} not supported for price fetching, using fallback")
+                return 2000.0
+
+            weth_address = COMMON_TOKENS[self.network]["WETH"]
+            usdc_address = COMMON_TOKENS[self.network]["USDC"]
+
+            # Try to get price from Uniswap V3 first
+            price = self._get_dex_price(weth_address, usdc_address, "uniswap_v3")
+
+            # If that fails, try SushiSwap
+            if price is None:
+                price = self._get_dex_price(weth_address, usdc_address, "sushiswap")
+
+            # If still no price, use conservative fallback
+            if price is None:
+                print("Unable to fetch ETH price from DEX, using fallback value of 2000")
+                return 2000.0
+
+            return price
+
+        except Exception as e:
+            print(f"Error fetching ETH price: {e}, using fallback value of 2000")
+            return 2000.0
+
     def _estimate_gas_cost(self, gas_units: int = 500000) -> int:
         """Estimate gas cost in USD"""
         try:
@@ -587,11 +637,8 @@ class VibeAgent:
             gas_price = self.web3.eth.gas_price
             # Estimate ETH cost
             eth_cost = (gas_price * gas_units) / (10**18)
-            # ETH price estimation (in production, fetch from price oracle or Chainlink)
-            # This is a conservative estimate to prevent underestimating costs
-            eth_price_usd = (
-                2000  # TODO: Integrate with price oracle (Chainlink, Uniswap TWAP, etc.)
-            )
+            # Get real-time ETH price from DEX
+            eth_price_usd = self._get_eth_price_usd()
             return int(eth_cost * eth_price_usd)
         except Exception as e:
             print(f"Error estimating gas cost: {e}")
