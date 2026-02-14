@@ -622,6 +622,7 @@ class VibeAgent:
             usdc_address = COMMON_TOKENS[self.network]["USDC"]
 
             # Try to get price from Uniswap V3 first
+            # Returns USDC per WETH (since USDC ≈ USD, this gives us ETH price in USD)
             price = self._get_dex_price(weth_address, usdc_address, DEX_UNISWAP_V3)
 
             # If that fails, try SushiSwap

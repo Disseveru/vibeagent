@@ -4,6 +4,7 @@ Tests for autonomous agent components
 
 import pytest
 import os
+from unittest.mock import patch
 from vibeagent.config import AgentConfig
 from vibeagent.logger import VibeLogger
 from vibeagent.execution_engine import ExecutionEngine
@@ -336,56 +337,51 @@ class TestVibeAgent:
 
     def test_eth_price_fetching(self):
         """Test that ETH price can be fetched from DEX"""
-        # Setup test environment
-        os.environ["ETHEREUM_RPC_URL"] = "https://eth.llamarpc.com"
+        # Use environment variable patch to avoid test pollution
+        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": "https://eth.llamarpc.com"}):
+            # Import after env is set
+            from vibeagent.agent import VibeAgent
 
-        # Import after env is set
-        from vibeagent.agent import VibeAgent
+            agent = VibeAgent(network="ethereum")
 
-        agent = VibeAgent(network="ethereum")
+            # Test ETH price fetching
+            eth_price = agent._get_eth_price_usd()
 
-        # Test ETH price fetching
-        eth_price = agent._get_eth_price_usd()
-
-        # Price should be reasonable (between $100 and $10000)
-        # Using wide range to avoid test failures due to market volatility
-        assert isinstance(eth_price, float)
-        assert self.MIN_REASONABLE_ETH_PRICE <= eth_price <= self.MAX_REASONABLE_ETH_PRICE
+            # Price should be reasonable (between $100 and $10000)
+            # Using wide range to avoid test failures due to market volatility
+            assert isinstance(eth_price, float)
+            assert self.MIN_REASONABLE_ETH_PRICE <= eth_price <= self.MAX_REASONABLE_ETH_PRICE
 
     def test_eth_price_fallback(self):
         """Test that ETH price falls back to 2000 when DEX queries fail"""
-        os.environ["ETHEREUM_RPC_URL"] = "https://eth.llamarpc.com"
+        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": "https://eth.llamarpc.com"}):
+            from vibeagent.agent import VibeAgent
 
-        from vibeagent.agent import VibeAgent
-        from unittest.mock import patch
+            agent = VibeAgent(network="ethereum")
 
-        agent = VibeAgent(network="ethereum")
+            # Mock _get_dex_price to return None (simulating failure)
+            with patch.object(agent, "_get_dex_price", return_value=None):
+                eth_price = agent._get_eth_price_usd()
 
-        # Mock _get_dex_price to return None (simulating failure)
-        with patch.object(agent, "_get_dex_price", return_value=None):
-            eth_price = agent._get_eth_price_usd()
-
-        # Should fallback to 2000
-        assert eth_price == 2000.0
+            # Should fallback to 2000
+            assert eth_price == 2000.0
 
     def test_gas_cost_estimation(self):
         """Test that gas cost estimation uses real ETH price"""
-        os.environ["ETHEREUM_RPC_URL"] = "https://eth.llamarpc.com"
+        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": "https://eth.llamarpc.com"}):
+            from vibeagent.agent import VibeAgent
 
-        from vibeagent.agent import VibeAgent
-        from unittest.mock import patch
+            agent = VibeAgent(network="ethereum")
 
-        agent = VibeAgent(network="ethereum")
+            # Mock _get_eth_price_usd to return a known value
+            with patch.object(agent, "_get_eth_price_usd", return_value=2000.0):
+                # Call the gas cost estimation which should use our mocked ETH price
+                # Even if gas_price is 0, the method should still call _get_eth_price_usd
+                gas_cost = agent._estimate_gas_cost(gas_units=500000)
 
-        # Mock _get_eth_price_usd to return a known value
-        with patch.object(agent, "_get_eth_price_usd", return_value=2000.0):
-            # Call the gas cost estimation which should use our mocked ETH price
-            # Even if gas_price is 0, the method should still call _get_eth_price_usd
-            gas_cost = agent._estimate_gas_cost(gas_units=500000)
-
-        # Should return an integer (might be 0 if gas_price is 0, but that's ok for this test)
-        # The important thing is that it successfully calls _get_eth_price_usd
-        assert isinstance(gas_cost, int)
+            # Should return an integer (might be 0 if gas_price is 0, but that's ok for this test)
+            # The important thing is that it successfully calls _get_eth_price_usd
+            assert isinstance(gas_cost, int)
 
 
 if __name__ == "__main__":
