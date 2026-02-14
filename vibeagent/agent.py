@@ -19,6 +19,10 @@ from .contract_abis import (
 
 load_dotenv()
 
+# DEX names
+DEX_UNISWAP_V3 = "uniswap_v3"
+DEX_SUSHISWAP = "sushiswap"
+
 # Common token addresses for price fetching
 COMMON_TOKENS = {
     "ethereum": {
@@ -600,6 +604,11 @@ class VibeAgent:
         """
         Get current ETH price in USD from WETH/USDC pair on DEX
 
+        Fetches price with the following fallback chain:
+        1. Uniswap V3 WETH/USDC pair
+        2. SushiSwap WETH/USDC pair
+        3. Hardcoded 2000 USD (conservative estimate)
+
         Returns:
             ETH price in USD, or 2000 as fallback if unable to fetch
         """
@@ -613,11 +622,11 @@ class VibeAgent:
             usdc_address = COMMON_TOKENS[self.network]["USDC"]
 
             # Try to get price from Uniswap V3 first
-            price = self._get_dex_price(weth_address, usdc_address, "uniswap_v3")
+            price = self._get_dex_price(weth_address, usdc_address, DEX_UNISWAP_V3)
 
             # If that fails, try SushiSwap
             if price is None:
-                price = self._get_dex_price(weth_address, usdc_address, "sushiswap")
+                price = self._get_dex_price(weth_address, usdc_address, DEX_SUSHISWAP)
 
             # If still no price, use conservative fallback
             if price is None:

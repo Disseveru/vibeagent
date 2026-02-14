@@ -330,6 +330,10 @@ class TestAutonomousScanner:
 class TestVibeAgent:
     """Test VibeAgent price fetching functionality"""
 
+    # Reasonable bounds for ETH price (using wide range to handle volatility)
+    MIN_REASONABLE_ETH_PRICE = 100
+    MAX_REASONABLE_ETH_PRICE = 10000
+
     def test_eth_price_fetching(self):
         """Test that ETH price can be fetched from DEX"""
         # Setup test environment
@@ -346,7 +350,7 @@ class TestVibeAgent:
         # Price should be reasonable (between $100 and $10000)
         # Using wide range to avoid test failures due to market volatility
         assert isinstance(eth_price, float)
-        assert 100 <= eth_price <= 10000
+        assert self.MIN_REASONABLE_ETH_PRICE <= eth_price <= self.MAX_REASONABLE_ETH_PRICE
 
     def test_eth_price_fallback(self):
         """Test that ETH price falls back to 2000 when DEX queries fail"""
