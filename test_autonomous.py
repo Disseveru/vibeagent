@@ -331,6 +331,9 @@ class TestAutonomousScanner:
 class TestVibeAgent:
     """Test VibeAgent price fetching functionality"""
 
+    # Test RPC endpoint
+    TEST_RPC_URL = "https://eth.llamarpc.com"
+
     # Reasonable bounds for ETH price (using wide range to handle volatility)
     MIN_REASONABLE_ETH_PRICE = 100
     MAX_REASONABLE_ETH_PRICE = 10000
@@ -338,7 +341,7 @@ class TestVibeAgent:
     def test_eth_price_fetching(self):
         """Test that ETH price can be fetched from DEX"""
         # Use environment variable patch to avoid test pollution
-        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": "https://eth.llamarpc.com"}):
+        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": self.TEST_RPC_URL}):
             # Import after env is set
             from vibeagent.agent import VibeAgent
 
@@ -354,7 +357,7 @@ class TestVibeAgent:
 
     def test_eth_price_fallback(self):
         """Test that ETH price falls back to 2000 when DEX queries fail"""
-        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": "https://eth.llamarpc.com"}):
+        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": self.TEST_RPC_URL}):
             from vibeagent.agent import VibeAgent
 
             agent = VibeAgent(network="ethereum")
@@ -368,7 +371,7 @@ class TestVibeAgent:
 
     def test_gas_cost_estimation(self):
         """Test that gas cost estimation uses real ETH price"""
-        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": "https://eth.llamarpc.com"}):
+        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": self.TEST_RPC_URL}):
             from vibeagent.agent import VibeAgent
 
             agent = VibeAgent(network="ethereum")
@@ -376,11 +379,9 @@ class TestVibeAgent:
             # Mock _get_eth_price_usd to return a known value
             with patch.object(agent, "_get_eth_price_usd", return_value=2000.0):
                 # Call the gas cost estimation which should use our mocked ETH price
-                # Even if gas_price is 0, the method should still call _get_eth_price_usd
                 gas_cost = agent._estimate_gas_cost(gas_units=500000)
 
-            # Should return an integer (might be 0 if gas_price is 0, but that's ok for this test)
-            # The important thing is that it successfully calls _get_eth_price_usd
+            # Should return an integer
             assert isinstance(gas_cost, int)
 
 
