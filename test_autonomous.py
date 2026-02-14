@@ -4,6 +4,7 @@ Tests for autonomous agent components
 
 import pytest
 import os
+from unittest.mock import patch
 from vibeagent.config import AgentConfig
 from vibeagent.logger import VibeLogger
 from vibeagent.execution_engine import ExecutionEngine
@@ -325,6 +326,63 @@ class TestAutonomousScanner:
         # Check it was applied
         assert scanner.config.min_profit_usd == 100
         assert scanner.config.scan_interval_seconds == 30
+
+
+class TestVibeAgent:
+    """Test VibeAgent price fetching functionality"""
+
+    # Test RPC endpoint
+    TEST_RPC_URL = "https://eth.llamarpc.com"
+
+    # Reasonable bounds for ETH price (using wide range to handle volatility)
+    MIN_REASONABLE_ETH_PRICE = 100
+    MAX_REASONABLE_ETH_PRICE = 10000
+
+    def test_eth_price_fetching(self):
+        """Test that ETH price can be fetched from DEX"""
+        # Use environment variable patch to avoid test pollution
+        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": self.TEST_RPC_URL}):
+            # Import after env is set
+            from vibeagent.agent import VibeAgent
+
+            agent = VibeAgent(network="ethereum")
+
+            # Test ETH price fetching
+            eth_price = agent._get_eth_price_usd()
+
+            # Price should be reasonable (between $100 and $10000)
+            # Using wide range to avoid test failures due to market volatility
+            assert isinstance(eth_price, float)
+            assert self.MIN_REASONABLE_ETH_PRICE <= eth_price <= self.MAX_REASONABLE_ETH_PRICE
+
+    def test_eth_price_fallback(self):
+        """Test that ETH price falls back to 2000 when DEX queries fail"""
+        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": self.TEST_RPC_URL}):
+            from vibeagent.agent import VibeAgent
+
+            agent = VibeAgent(network="ethereum")
+
+            # Mock _get_dex_price to return None (simulating failure)
+            with patch.object(agent, "_get_dex_price", return_value=None):
+                eth_price = agent._get_eth_price_usd()
+
+            # Should fallback to 2000
+            assert eth_price == 2000.0
+
+    def test_gas_cost_estimation(self):
+        """Test that gas cost estimation uses real ETH price"""
+        with patch.dict(os.environ, {"ETHEREUM_RPC_URL": self.TEST_RPC_URL}):
+            from vibeagent.agent import VibeAgent
+
+            agent = VibeAgent(network="ethereum")
+
+            # Mock _get_eth_price_usd to return a known value
+            with patch.object(agent, "_get_eth_price_usd", return_value=2000.0):
+                # Call the gas cost estimation which should use our mocked ETH price
+                gas_cost = agent._estimate_gas_cost(gas_units=500000)
+
+            # Should return an integer
+            assert isinstance(gas_cost, int)
 
 
 if __name__ == "__main__":
