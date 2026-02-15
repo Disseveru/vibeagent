@@ -624,6 +624,7 @@
         let currentStrategy = null;
         let connectedWallet = null;
         let liveInterval = null;
+        let agentInitialized = false;
         
         const liveFeeds = {
             arbitrage: [
@@ -688,6 +689,16 @@
             connectStatus.classList.remove('hidden', 'error', 'success');
             connectStatus.classList.add('info');
             connectStatus.textContent = 'Requesting wallet connection...';
+
+            const hasProvider = typeof window !== 'undefined' && typeof window.ethereum !== 'undefined';
+            if (!hasProvider) {
+                const providerMessage = 'No wallet provider detected. Install MetaMask or another Reown-compatible wallet to continue.';
+                connectStatus.textContent = providerMessage;
+                connectStatus.classList.remove('info');
+                connectStatus.classList.add('error');
+                showStatus(providerMessage, 'error');
+                return;
+            }
             
             if (typeof window.connectWallet !== 'function') {
                 connectStatus.textContent = 'Reown wallet script not loaded. Please refresh and try again.';
@@ -720,6 +731,26 @@
                 connectStatus.classList.add('success');
                 connectStatus.classList.remove('hidden');
                 
+                connectStatus.textContent = 'Initializing agent with your wallet...';
+                const initResult = await initializeAgent({
+                    silent: true,
+                    network: document.getElementById('network').value,
+                    walletAddress: connectedWallet
+                });
+
+                if (initResult.success) {
+                    connectStatus.textContent = 'Wallet connected and agent initialized.';
+                    connectStatus.classList.remove('error');
+                    connectStatus.classList.add('success');
+                    showStatus(`Agent initialized on ${document.getElementById('network').value}!`, 'success');
+                } else {
+                    const initMessage = initResult.message || 'Agent initialization failed. Please retry.';
+                    connectStatus.textContent = initMessage;
+                    connectStatus.classList.remove('info', 'success');
+                    connectStatus.classList.add('error');
+                    showStatus(initMessage, 'error');
+                }
+
                 setTimeout(() => {
                     document.getElementById('landing').classList.add('hidden');
                     document.getElementById('appContent').classList.remove('hidden');
@@ -857,6 +888,7 @@
         async function onNetworkChange() {
             const network = document.getElementById('network').value;
             const walletState = (typeof getWalletState === 'function') ? getWalletState() : null;
+            agentInitialized = false;
             
             if (walletState?.connected && typeof switchNetwork === 'function') {
                 // Switch network in wallet
@@ -864,13 +896,17 @@
             }
         }
         
-        async function initializeAgent() {
-            const network = document.getElementById('network').value;
-            const walletAddress = document.getElementById('walletAddress').value;
+        async function initializeAgent(options = {}) {
+            const network = options.network || document.getElementById('network').value;
+            const walletAddress = options.walletAddress || document.getElementById('walletAddress').value;
+            const silent = options.silent === true;
             
             if (!walletAddress) {
-                showStatus('Please connect your wallet before initializing.', 'error');
-                return;
+                agentInitialized = false;
+                if (!silent) {
+                    showStatus('Please connect your wallet before initializing.', 'error');
+                }
+                return { success: false, message: 'Wallet not connected' };
             }
             
             try {
@@ -881,18 +917,44 @@
                 });
                 
                 const data = await response.json();
+                const initSuccess = response.ok && data?.success;
                 
-                if (data.success) {
-                    showStatus(`Agent initialized on ${data.network}!`, 'success');
-                } else {
-                    showStatus(`Error: ${data.error}`, 'error');
+                if (initSuccess) {
+                    agentInitialized = true;
+                    if (!silent) {
+                        showStatus(`Agent initialized on ${data.network}!`, 'success');
+                    }
+                    return { success: true, message: data.message };
                 }
+                
+                agentInitialized = false;
+                const errorMessage = data?.error || 'Initialization failed';
+                if (!silent) {
+                    showStatus(`Error: ${errorMessage}`, 'error');
+                }
+                return { success: false, message: errorMessage };
             } catch (error) {
-                showStatus(`Error: ${error.message}`, 'error');
+                agentInitialized = false;
+                const message = error?.message || 'Initialization error';
+                if (!silent) {
+                    showStatus(`Error: ${message}`, 'error');
+                }
+                return { success: false, message };
             }
+        }
+
+        function requireAgentInitialization() {
+            if (agentInitialized) {
+                return true;
+            }
+            showStatus('Initialize the agent with your connected wallet before scanning.', 'error');
+            return false;
         }
         
         async function scanArbitrage() {
+            if (!requireAgentInitialization()) {
+                return;
+            }
             const tokenA = document.getElementById('tokenA').value;
             const tokenB = document.getElementById('tokenB').value;
             const dexes = document.getElementById('dexes').value.split(',').map(d => d.trim());
@@ -913,6 +975,12 @@
                 
                 const data = await response.json();
                 
+                if (!response.ok) {
+                    agentInitialized = data?.error === 'Agent not initialized' ? false : agentInitialized;
+                    showStatus(`Error: ${data.error || 'Scan failed'}`, 'error');
+                    return;
+                }
+
                 if (data.success) {
                     currentStrategy = data.opportunity;
                     const resultDiv = document.getElementById('arbitrageResult');
@@ -931,6 +999,9 @@
         }
         
         async function scanLiquidation() {
+            if (!requireAgentInitialization()) {
+                return;
+            }
             const protocol = document.getElementById('protocol').value;
             const account = document.getElementById('account').value || null;
             
@@ -944,6 +1015,12 @@
                 });
                 
                 const data = await response.json();
+                
+                if (!response.ok) {
+                    agentInitialized = data?.error === 'Agent not initialized' ? false : agentInitialized;
+                    showStatus(`Error: ${data.error || 'Scan failed'}`, 'error');
+                    return;
+                }
                 
                 if (data.success) {
                     if (data.opportunities.length > 0) {
