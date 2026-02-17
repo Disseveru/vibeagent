@@ -622,9 +622,11 @@
     <script src="/static/reown-wallet.js"></script>
     <script>
         let currentStrategy = null;
+        let currentTransactionBatch = null;
         let connectedWallet = null;
         let liveInterval = null;
         let agentInitialized = false;
+        let statusUpdateInFlight = false;
         
         const liveFeeds = {
             arbitrage: [
@@ -1061,6 +1063,7 @@
                 const data = await response.json();
                 
                 if (data.success) {
+                    currentTransactionBatch = data.transaction_batch;
                     const resultDiv = document.getElementById('exportResult');
                     resultDiv.innerHTML = `
                         <h3>✅ Transaction Bundle Ready</h3>
@@ -1076,6 +1079,7 @@
                         </p>
                         <pre>${JSON.stringify(data.transaction_batch, null, 2)}</pre>
                         <button onclick="copyToClipboard()">Copy to Clipboard</button>
+                        <button style="margin-left: 10px;" onclick="sendTransactionBatch()">Send with Reown Wallet</button>
                     `;
                     resultDiv.classList.remove('hidden');
                     showStatus('Transaction batch exported successfully!', 'success');
@@ -1144,6 +1148,65 @@
             }).catch(err => {
                 showStatus('Failed to copy', 'error');
             });
+        }
+
+        function normalizeHexValue(value) {
+            try {
+                const bigintValue = BigInt(value ?? 0);
+                return `0x${bigintValue.toString(16)}`;
+            } catch (error) {
+                return '0x0';
+            }
+        }
+
+        async function sendTransactionBatch() {
+            if (!currentTransactionBatch || !currentTransactionBatch.transactions || currentTransactionBatch.transactions.length === 0) {
+                showStatus('Export a strategy first to get the transaction steps.', 'error');
+                return;
+            }
+            if (!connectedWallet) {
+                showStatus('Connect your wallet before sending transactions.', 'error');
+                return;
+            }
+            if (typeof executeTransaction !== 'function') {
+                showStatus('Wallet transaction helper not available. Refresh and try again.', 'error');
+                return;
+            }
+
+            showStatus('Sending strategy transactions to your wallet for signing...', 'info');
+            const submitted = [];
+            const network = currentTransactionBatch.meta?.network || document.getElementById('network').value;
+
+            for (const action of currentTransactionBatch.transactions) {
+                const txParams = {
+                    from: connectedWallet,
+                    to: action.to,
+                    data: action.data,
+                    value: normalizeHexValue(action.value)
+                };
+
+                const result = await executeTransaction(txParams);
+                if (!result.success) {
+                    showStatus(`Transaction failed: ${result.error || 'Unknown error'}`, 'error');
+                    return;
+                }
+                submitted.push({ hash: result.txHash, description: action.description || action.meta?.description || 'Strategy action' });
+            }
+
+            const resultDiv = document.getElementById('exportResult');
+            const explorerLinks = submitted.map(item => {
+                const url = (typeof getExplorerUrl === 'function') ? getExplorerUrl(item.hash, network) : '#';
+                const safeLabel = escapeHtml(item.description);
+                return `<li><a href="${url}" target="_blank" rel="noopener">${safeLabel}: ${item.hash}</a></li>`;
+            }).join('');
+
+            resultDiv.innerHTML += `
+                <div style="margin-top:10px;">
+                    <h4>Submitted Transactions</h4>
+                    <ul>${explorerLinks}</ul>
+                </div>
+            `;
+            showStatus('All strategy steps submitted to your wallet.', 'success');
         }
         
         // Autonomous Mode Functions
@@ -1263,40 +1326,41 @@
         }
         
         async function updateStatus() {
+            if (statusUpdateInFlight) {
+                return;
+            }
+            statusUpdateInFlight = true;
             try {
-                // Get scanner status
-                const statusResponse = await fetch('/api/autonomous/status');
-                const statusData = await statusResponse.json();
+                const [statusResponse, statsResponse, approvalsResponse, oppsResponse] = await Promise.all([
+                    fetch('/api/autonomous/status'),
+                    fetch('/api/autonomous/stats'),
+                    fetch('/api/autonomous/approvals'),
+                    fetch('/api/autonomous/opportunities?limit=10')
+                ]);
+
+                const [statusData, statsData, approvalsData, oppsData] = await Promise.all([
+                    statusResponse.json(),
+                    statsResponse.json(),
+                    approvalsResponse.json(),
+                    oppsResponse.json()
+                ]);
                 
                 if (statusData.success) {
                     displayStatus(statusData.status);
                 }
-                
-                // Get execution stats
-                const statsResponse = await fetch('/api/autonomous/stats');
-                const statsData = await statsResponse.json();
-                
                 if (statsData.success) {
                     displayStats(statsData.stats);
                 }
-                
-                // Get pending approvals
-                const approvalsResponse = await fetch('/api/autonomous/approvals');
-                const approvalsData = await approvalsResponse.json();
-                
                 if (approvalsData.success) {
                     displayApprovals(approvalsData.approvals);
                 }
-                
-                // Get recent opportunities
-                const oppsResponse = await fetch('/api/autonomous/opportunities?limit=10');
-                const oppsData = await oppsResponse.json();
-                
                 if (oppsData.success) {
                     displayOpportunities(oppsData.opportunities);
                 }
             } catch (error) {
                 console.error('Error updating status:', error);
+            } finally {
+                statusUpdateInFlight = false;
             }
         }
         
