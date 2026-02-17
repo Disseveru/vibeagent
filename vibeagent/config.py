@@ -50,6 +50,17 @@ class AgentConfig:
             return []
         return [item.strip() for item in value.split(",") if item.strip()]
 
+    @property
+    def blacklisted_addresses(self) -> List[str]:
+        """List of blacklisted addresses"""
+        return self._blacklisted_addresses
+
+    @blacklisted_addresses.setter
+    def blacklisted_addresses(self, addresses: List[str]):
+        """Update blacklist and maintain lowercase set for fast lookups"""
+        self._blacklisted_addresses = addresses or []
+        self._blacklisted_set = {addr.lower() for addr in self._blacklisted_addresses}
+
     def _load_token_pairs(self) -> List[tuple]:
         """Load token pairs to monitor from config"""
         # Common pairs on Ethereum mainnet
@@ -74,7 +85,7 @@ class AgentConfig:
 
     def is_address_blacklisted(self, address: str) -> bool:
         """Check if an address is blacklisted"""
-        return address.lower() in [addr.lower() for addr in self.blacklisted_addresses]
+        return address.lower() in self._blacklisted_set
 
     def is_profitable(self, profit_usd: float) -> bool:
         """Check if profit meets minimum threshold"""
