@@ -711,13 +711,26 @@
             }
             
             try {
-                // Attempt connection (will handle both injected and WalletConnect)
-                const connected = await window.connectWallet();
+                // Add timeout to prevent hanging UI
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Connection timeout after 30 seconds')), 30000);
+                });
+                
+                // Attempt connection with timeout (will handle both injected and WalletConnect)
+                const connected = await Promise.race([
+                    window.connectWallet(),
+                    timeoutPromise
+                ]);
                 
                 if (!connected) {
-                    // connectWallet already showed error message
+                    // connectWallet already showed error message via showWalletStatus
+                    // Just update the local status indicator
                     connectStatus.classList.remove('info');
                     connectStatus.classList.add('error');
+                    // Get the error from wallet status if available
+                    if (!connectStatus.textContent || connectStatus.textContent === 'Requesting wallet connection...') {
+                        connectStatus.textContent = 'Wallet connection failed. Please retry.';
+                    }
                     return;
                 }
                 

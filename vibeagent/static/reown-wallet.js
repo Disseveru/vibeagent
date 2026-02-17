@@ -217,25 +217,34 @@ async function connectWallet() {
     try {
         // Initialize if not already done
         if (!walletState.provider) {
-            await initReownWallet();
+            const initialized = await initReownWallet();
+            
+            // If initialization failed and still no provider
+            if (!initialized && !walletState.provider) {
+                const isMobile = isMobileDevice();
+                let message;
+                
+                if (isMobile) {
+                    // On mobile, guide user to use WalletConnect or MetaMask app
+                    message = 'To connect on mobile: Open this page in MetaMask app browser, or install a wallet that supports WalletConnect. WalletConnect libraries are not available in this environment.';
+                } else {
+                    // On desktop, suggest installing MetaMask
+                    message = 'Please install MetaMask or another Web3 wallet extension. WalletConnect is not available in this environment.';
+                }
+                
+                showWalletStatus(message, 'error');
+                return false;
+            }
         }
         
-        // If still no provider, show helpful message
+        // If still no provider, show error
         if (!walletState.provider) {
             const isMobile = isMobileDevice();
             let message;
             
             if (isMobile) {
-                // On mobile, guide user to use WalletConnect or MetaMask app
                 message = 'To connect on mobile: Open this page in MetaMask app browser, or use a wallet that supports WalletConnect';
-                
-                // Try to open WalletConnect deep link
-                const wcUri = await createWalletConnectUri();
-                if (wcUri) {
-                    message = 'Opening wallet app... If nothing happens, copy the connection URI and paste it in your wallet app';
-                }
             } else {
-                // On desktop, suggest installing MetaMask
                 message = 'Please install MetaMask or another Web3 wallet extension';
             }
             
@@ -596,23 +605,33 @@ function copyAddress() {
  * Show wallet status message
  */
 function showWalletStatus(message, type = 'info') {
-    const statusDiv = document.getElementById('walletStatus');
-    if (!statusDiv) {
-        // Fallback to main status if wallet status doesn't exist
-        if (typeof showStatus === 'function') {
-            showStatus(message, type);
-        }
+    // Try to write to landing page status first
+    const connectStatus = document.getElementById('connectStatus');
+    if (connectStatus && !connectStatus.classList.contains('hidden')) {
+        connectStatus.textContent = message;
+        connectStatus.classList.remove('info', 'success', 'error');
+        connectStatus.classList.add(type);
         return;
     }
     
-    statusDiv.textContent = message;
-    statusDiv.className = `status-message status-${type}`;
-    statusDiv.style.display = 'block';
+    // Otherwise use wallet status in main app
+    const statusDiv = document.getElementById('walletStatus');
+    if (statusDiv) {
+        statusDiv.textContent = message;
+        statusDiv.className = `status-message status-${type}`;
+        statusDiv.style.display = 'block';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+        }, 5000);
+        return;
+    }
     
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        statusDiv.style.display = 'none';
-    }, 5000);
+    // Fallback to main status if nothing else works
+    if (typeof showStatus === 'function') {
+        showStatus(message, type);
+    }
 }
 
 /**
