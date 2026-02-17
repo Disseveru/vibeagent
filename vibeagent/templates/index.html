@@ -13,6 +13,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="VibeAgent">
     
+    <!-- Reown Project ID (set via server-side rendering or environment) -->
+    <meta name="reown-project-id" content="{{ reown_project_id | default('demo-project-id-replace-me') }}">
+    
     <!-- PWA Manifest -->
     <link rel="manifest" href="/static/manifest.json">
     
@@ -619,6 +622,13 @@
     </div>
 </div>
 
+    <!-- WalletConnect Universal Provider for mobile wallet support -->
+    <script src="https://unpkg.com/@walletconnect/universal-provider@2.11.0/dist/index.umd.js"></script>
+    
+    <!-- Reown AppKit Web Components (optional, for modal UI) -->
+    <script type="module" src="https://unpkg.com/@reown/appkit@1.0.2/dist/appkit.js"></script>
+    
+    <!-- VibeAgent Wallet Integration -->
     <script src="/static/reown-wallet.js"></script>
     <script>
         let currentStrategy = null;
@@ -692,16 +702,7 @@
             connectStatus.classList.add('info');
             connectStatus.textContent = 'Requesting wallet connection...';
 
-            const hasProvider = typeof window !== 'undefined' && typeof window.ethereum !== 'undefined';
-            if (!hasProvider) {
-                const providerMessage = 'No wallet provider detected. Install MetaMask or another Reown-compatible wallet to continue.';
-                connectStatus.textContent = providerMessage;
-                connectStatus.classList.remove('info');
-                connectStatus.classList.add('error');
-                showStatus(providerMessage, 'error');
-                return;
-            }
-            
+            // Check if reown-wallet.js is loaded
             if (typeof window.connectWallet !== 'function') {
                 connectStatus.textContent = 'Reown wallet script not loaded. Please refresh and try again.';
                 connectStatus.classList.remove('info');
@@ -710,12 +711,23 @@
             }
             
             try {
+                // Attempt connection (will handle both injected and WalletConnect)
                 const connected = await window.connectWallet();
+                
+                if (!connected) {
+                    // connectWallet already showed error message
+                    connectStatus.classList.remove('info');
+                    connectStatus.classList.add('error');
+                    return;
+                }
+                
+                // Get wallet state after connection
                 const state = (typeof getWalletState === 'function') ? getWalletState() : null;
                 const walletAddress = state?.address;
                 
-                if (!connected || !walletAddress) {
-                    connectStatus.textContent = 'Wallet connection failed. Please retry.';
+                // Verify we have a valid address
+                if (!walletAddress) {
+                    connectStatus.textContent = 'Wallet connection failed - no address returned. Please retry.';
                     connectStatus.classList.remove('info');
                     connectStatus.classList.add('error');
                     return;

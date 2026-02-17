@@ -36,7 +36,8 @@ wallet_connections_lock = threading.Lock()
 @app.route("/")
 def index():
     """Main page"""
-    return render_template("index.html")
+    reown_project_id = os.environ.get("REOWN_PROJECT_ID", "demo-project-id-replace-me")
+    return render_template("index.html", reown_project_id=reown_project_id)
 
 
 @app.route("/health")
