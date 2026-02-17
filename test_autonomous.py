@@ -32,6 +32,17 @@ class TestConfig:
         assert config.is_address_blacklisted("0xabc")  # Case insensitive
         assert not config.is_address_blacklisted("0x123")
 
+    def test_config_blacklist_cache_refresh(self):
+        """Blacklist set should refresh on reassignment"""
+        config = AgentConfig()
+        config.blacklisted_addresses = ["0xAAA"]
+        assert config.is_address_blacklisted("0xaaa")
+
+        # Reassign should rebuild the cached set
+        config.blacklisted_addresses = ["0xBBB"]
+        assert not config.is_address_blacklisted("0xaaa")
+        assert config.is_address_blacklisted("0xbbb")
+
     def test_config_profit_check(self):
         """Test profit threshold checking"""
         config = AgentConfig()
