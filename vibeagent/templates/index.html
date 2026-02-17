@@ -411,7 +411,10 @@
         <div class="hero-card">
             <h1>⚡ VibeAgent</h1>
             <p>Connect your Reown wallet to stream real-time arbitrage, liquidation, and cross-chain spreads. Lightning-fast paths are lined up for you to pick and execute without writing code.</p>
-            <button class="reown-btn" onclick="handleReownConnect()">Connect with Reown</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="reown-btn" onclick="handleReownConnect()">Connect with Reown</button>
+                <button class="btn-secondary" onclick="continueWithoutWallet()">Explore without wallet</button>
+            </div>
             <div id="connectStatus" class="status info hidden" style="margin-top: 18px;"></div>
         </div>
     </div>
@@ -771,6 +774,34 @@
                 console.error('Wallet connection error', errorDetails);
             }
         }
+
+        async function continueWithoutWallet() {
+            const connectStatus = document.getElementById('connectStatus');
+            connectStatus.classList.remove('hidden', 'error');
+            connectStatus.classList.add('info');
+            connectStatus.textContent = 'Starting demo mode without wallet...';
+
+            const initResult = await initializeAgent({
+                silent: true,
+                network: document.getElementById('network').value,
+                walletAddress: null
+            });
+
+            if (initResult.success) {
+                agentInitialized = true;
+                connectStatus.textContent = 'Demo mode ready. Connect a wallet to execute transactions.';
+                connectStatus.classList.remove('info');
+                connectStatus.classList.add('success');
+                document.getElementById('landing').classList.add('hidden');
+                document.getElementById('appContent').classList.remove('hidden');
+                showStatus('Demo mode active — wallet-required features will prompt you to connect.', 'info');
+                startLiveTicker();
+            } else {
+                connectStatus.textContent = initResult.message || 'Unable to start without wallet.';
+                connectStatus.classList.remove('success');
+                connectStatus.classList.add('error');
+            }
+        }
         
         function startLiveTicker() {
             renderStreams();
@@ -902,20 +933,12 @@
             const network = options.network || document.getElementById('network').value;
             const walletAddress = options.walletAddress || document.getElementById('walletAddress').value;
             const silent = options.silent === true;
-            
-            if (!walletAddress) {
-                agentInitialized = false;
-                if (!silent) {
-                    showStatus('Please connect your wallet before initializing.', 'error');
-                }
-                return { success: false, message: 'Wallet not connected' };
-            }
-            
+
             try {
                 const response = await fetch('/api/initialize', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ network, wallet_address: walletAddress })
+                    body: JSON.stringify({ network, wallet_address: walletAddress || null })
                 });
                 
                 const data = await response.json();
