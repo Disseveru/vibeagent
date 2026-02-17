@@ -51,8 +51,20 @@ const SAFETY_SETTINGS = {
 
 /**
  * Check if running on mobile device
+ * Uses feature detection instead of user-agent sniffing for better reliability
  */
 function isMobileDevice() {
+    // Primary check: touch points (most reliable)
+    if (navigator.maxTouchPoints > 0) {
+        return true;
+    }
+    
+    // Secondary check: coarse pointer (touch screen)
+    if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+        return true;
+    }
+    
+    // Fallback: user agent (less reliable but catches edge cases)
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
