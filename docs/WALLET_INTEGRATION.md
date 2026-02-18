@@ -111,6 +111,10 @@ Click **"Update Configuration"** to save your settings.
    - If manual approval is disabled: Transaction executes automatically
 4. Monitor results in the **Execution Statistics** and **Transaction History** sections
 
+## Native Android Installation
+
+If you're embedding VibeAgent's Reown AppKit flow into a native Android app, follow the official Reown AppKit Android Core installation guide: [docs.reown.com/appkit/android/core/installation](https://docs.reown.com/appkit/android/core/installation).
+
 ## Using Manual Mode
 
 If you prefer not to use autonomous mode, you can manually scan for opportunities:
