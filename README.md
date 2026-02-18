@@ -109,6 +109,10 @@ Install VibeAgent as a Progressive Web App on your Android device:
 
 See [Android Installation Guide](docs/ANDROID_INSTALL.md) for detailed instructions.
 
+#### 📱 Native Android (Reown Core)
+
+Building a native client instead of the PWA? Install Reown Android Core with the same `REOWN_PROJECT_ID` and point it at the VibeAgent APIs. See [Reown Android Core Setup](docs/REOWN_ANDROID_CORE.md).
+
 #### 🌐 Cloud Deployment (Deploy to Render)
 
 Want to access VibeAgent from anywhere via web browser?
