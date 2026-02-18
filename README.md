@@ -12,7 +12,7 @@ VibeAgent is an intelligent coding assistant that helps you create and execute s
 - 🔄 **Autonomous Arbitrage Agent**: Continuously scans and executes profitable opportunities automatically
 - 💎 **Flashloan Arbitrage**: Find price differences across DEXes and profit with zero capital
 - 🎯 **Smart Liquidations**: Identify and execute profitable liquidations on lending protocols
-- 💳 **Reown AppKit Wallet Integration**: Connect with 300+ wallets including MetaMask, Trust Wallet, Coinbase Wallet, Rainbow, and more
+- 💳 **Wallet Integration**: Connect your MetaMask or Web3 wallet for DeFi operations
 - 🔐 **Avocado Multi-Sig Integration**: Seamlessly integrates with Instadapp's Avocado wallet transaction builder
 - 🛡️ **Safety Checks**: Configurable profit thresholds, gas limits, and blacklists
 - 📊 **Real-Time Dashboard**: Live monitoring of scans, executions, and profits
@@ -21,19 +21,16 @@ VibeAgent is an intelligent coding assistant that helps you create and execute s
 - 🔗 **Multi-Chain**: Supports Ethereum, Polygon, and Arbitrum
 - 📱 **Android PWA Support**: Install as a native-like app on Android devices
 
-## 💳 Wallet Integration (NEW!)
+## 💳 Wallet Integration
 
-VibeAgent now supports seamless wallet connection through Reown AppKit:
+VibeAgent supports direct wallet connection through Web3 providers:
 
-- **300+ Wallets Supported**: MetaMask, Trust Wallet, Coinbase Wallet, Rainbow, Ledger, and more
-- **One-Click Connection**: Simply click "Connect Wallet" and choose your preferred wallet
-- **Real-Time Balance**: See your wallet balance update in real-time
-- **Network Switching**: Easily switch between Ethereum, Polygon, and Arbitrum
-- **Transaction History**: View all your transactions with blockchain explorer links
-- **Safety First**: Manual approval mode, minimum profit thresholds, and gas price limits
-- **Your Wallet, Your Control**: You maintain full custody of your funds
+- **MetaMask**: Browser extension for desktop
+- **Coinbase Wallet**: Browser extension
+- **Brave Wallet**: Built into Brave browser
+- **Any Web3 Wallet**: Supporting window.ethereum standard
 
-See the [Wallet Integration Guide](docs/WALLET_INTEGRATION.md) for detailed setup and usage.
+Simply click "Connect Wallet" to use your personal wallet for DeFi operations.
 
 ## 🤖 Autonomous Agent
 
