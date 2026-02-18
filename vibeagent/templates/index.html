@@ -6,15 +6,12 @@
     <title>VibeAgent - Real-Time DeFi Streams</title>
     
     <!-- PWA Meta Tags for Android -->
-    <meta name="description" content="Real-time DeFi opportunity scanner with Reown wallet connect. Arbitrage, liquidations, and cross-chain spreads for everyone.">
+    <meta name="description" content="Real-time DeFi opportunity scanner with Web3 wallet connect. Arbitrage, liquidations, and cross-chain spreads for everyone.">
     <meta name="theme-color" content="#667eea">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="VibeAgent">
-    
-    <!-- Reown Project ID (set via server-side rendering or environment) -->
-    <meta name="reown-project-id" content="{{ reown_project_id | default('demo-project-id-replace-me') }}">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/static/manifest.json">
@@ -413,8 +410,8 @@
     <div id="landing" class="landing">
         <div class="hero-card">
             <h1>⚡ VibeAgent</h1>
-            <p>Connect your Reown wallet to stream real-time arbitrage, liquidation, and cross-chain spreads. Lightning-fast paths are lined up for you to pick and execute without writing code.</p>
-            <button class="reown-btn" onclick="handleReownConnect()">Connect with Reown</button>
+            <p>Connect your Web3 wallet to stream real-time arbitrage, liquidation, and cross-chain spreads. Lightning-fast paths are lined up for you to pick and execute without writing code.</p>
+            <button class="reown-btn" onclick="handleWalletConnect()">Connect Wallet</button>
             <div id="connectStatus" class="status info hidden" style="margin-top: 18px;"></div>
         </div>
     </div>
@@ -473,7 +470,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="walletAddress">Connected Wallet (Reown):</label>
+                    <label for="walletAddress">Connected Wallet:</label>
                     <input type="text" id="walletAddress" placeholder="0x..." />
                 </div>
                 <button onclick="initializeAgent()">Initialize Agent</button>
@@ -603,7 +600,7 @@
             <div class="grid">
                 <div class="card">
                     <h3>1. Connect</h3>
-                    <p>Use Reown connect on the landing screen, then pick the network you want to target.</p>
+                    <p>Connect your Web3 wallet on the landing screen, then pick the network you want to target.</p>
                 </div>
                 <div class="card">
                     <h3>2. Explore streams</h3>
@@ -622,14 +619,8 @@
     </div>
 </div>
 
-    <!-- WalletConnect Universal Provider for mobile wallet support -->
-    <script src="https://unpkg.com/@walletconnect/universal-provider@2.11.0/dist/index.umd.js"></script>
-    
-    <!-- Reown AppKit Web Components (optional, for modal UI) -->
-    <script type="module" src="https://unpkg.com/@reown/appkit@1.0.2/dist/appkit.js"></script>
-    
-    <!-- VibeAgent Wallet Integration -->
-    <script src="/static/reown-wallet.js"></script>
+    <!-- VibeAgent Simple Web3 Wallet Integration -->
+    <script src="/static/wallet.js"></script>
     <script>
         let currentStrategy = null;
         let currentTransactionBatch = null;
@@ -696,46 +687,33 @@
             return Math.random() * variance - offset;
         }
         
-        async function handleReownConnect() {
+        async function handleWalletConnect() {
             const connectStatus = document.getElementById('connectStatus');
             connectStatus.classList.remove('hidden', 'error', 'success');
             connectStatus.classList.add('info');
             connectStatus.textContent = 'Requesting wallet connection...';
 
-            // Check if reown-wallet.js is loaded
-            if (typeof window.connectWallet !== 'function') {
-                connectStatus.textContent = 'Reown wallet script not loaded. Please refresh and try again.';
+            // Check if Web3 wallet is available
+            if (!window.isWalletAvailable()) {
+                connectStatus.textContent = 'Please install MetaMask or another Web3 wallet extension';
                 connectStatus.classList.remove('info');
                 connectStatus.classList.add('error');
                 return;
             }
             
             try {
-                // Add timeout to prevent hanging UI
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Connection timeout after 30 seconds')), 30000);
-                });
-                
-                // Attempt connection with timeout (will handle both injected and WalletConnect)
-                const connected = await Promise.race([
-                    window.connectWallet(),
-                    timeoutPromise
-                ]);
+                // Connect wallet
+                const connected = await window.connectWallet();
                 
                 if (!connected) {
-                    // connectWallet already showed error message via showWalletStatus
-                    // Just update the local status indicator
+                    connectStatus.textContent = 'Wallet connection failed. Please retry.';
                     connectStatus.classList.remove('info');
                     connectStatus.classList.add('error');
-                    // Get the error from wallet status if available
-                    if (!connectStatus.textContent || connectStatus.textContent === 'Requesting wallet connection...') {
-                        connectStatus.textContent = 'Wallet connection failed. Please retry.';
-                    }
                     return;
                 }
                 
                 // Get wallet state after connection
-                const state = (typeof getWalletState === 'function') ? getWalletState() : null;
+                const state = window.getWalletState();
                 const walletAddress = state?.address;
                 
                 // Verify we have a valid address
@@ -756,7 +734,6 @@
                 connectStatus.textContent = 'Wallet successfully connected';
                 connectStatus.classList.remove('info');
                 connectStatus.classList.add('success');
-                connectStatus.classList.remove('hidden');
                 
                 connectStatus.textContent = 'Initializing agent with your wallet...';
                 const initResult = await initializeAgent({
@@ -1098,13 +1075,13 @@
                         <p style="margin: 10px 0;">
                             <strong>Next Steps:</strong><br>
                             1. Copy the JSON below<br>
-                            2. Load it into your signing flow (Safe, EOAs, or Reown-enabled apps)<br>
+                            2. Load it into your signing flow (Safe, EOAs, or Web3 wallet)<br>
                             3. Review gas, profit, and safety settings<br>
                             4. Send when you are ready
                         </p>
                         <pre>${JSON.stringify(data.transaction_batch, null, 2)}</pre>
                         <button onclick="copyToClipboard()">Copy to Clipboard</button>
-                        <button style="margin-left: 10px;" onclick="sendTransactionBatch()">Send with Reown Wallet</button>
+                        <button style="margin-left: 10px;" onclick="sendTransactionBatch()">Send with Connected Wallet</button>
                     `;
                     resultDiv.classList.remove('hidden');
                     showStatus('Transaction batch exported successfully!', 'success');
