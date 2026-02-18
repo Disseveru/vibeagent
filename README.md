@@ -104,6 +104,8 @@ Install VibeAgent as a Progressive Web App on your Android device:
 4. The app icon will appear on your home screen
 5. Launch it like any native Android app!
 
+No separate Android WebView/WebKit is installed—the PWA runs on the browser engine already on your device, so just keep Chrome or Firefox up to date.
+
 See [Android Installation Guide](docs/ANDROID_INSTALL.md) for detailed instructions.
 
 #### 🌐 Cloud Deployment (Deploy to Render)

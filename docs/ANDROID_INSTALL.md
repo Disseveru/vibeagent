@@ -150,6 +150,7 @@ Installing as a PWA gives you:
 
 - **Android Version**: 5.0 (Lollipop) or higher
 - **Browser**: Chrome 40+, Firefox 44+, Samsung Internet 4.0+
+- **Web engine**: No separate Android WebView/WebKit install is required—the PWA runs on the browser engine already bundled with your chosen browser
 - **Storage**: ~5-10 MB for app and cache
 - **Internet**: Required for initial installation and blockchain operations
 
