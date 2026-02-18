@@ -226,5 +226,6 @@ Returns all connected wallets (thread-safe).
 ## Further Reading
 
 - [Reown AppKit Documentation](https://docs.reown.com/appkit/overview)
+- [Reown AppKit Android Core Installation](https://docs.reown.com/appkit/android/core/installation)
 - [WalletConnect Documentation](https://docs.walletconnect.com/)
 - [EIP-1193 Provider API](https://eips.ethereum.org/EIPS/eip-1193)
